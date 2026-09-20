@@ -1,0 +1,19 @@
+{
+  "fps": 6.0,
+  "scale": 5.0,
+  "facing": "right",
+  "actions": {
+    "walk": {
+      "fps": 10.0
+    },
+    "run": {
+      "fps": 14.0
+    },
+    "sleep": {
+      "fps": 3.0
+    },
+    "lie": {
+      "fps": 5.0
+    }
+  }
+}

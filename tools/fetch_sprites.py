@@ -51,6 +51,27 @@ PIXEL_DOGS_CELL = (64, 48)
 # 마지막 행이 sleep(웅크려 자기), 그 바로 앞이 beg(두 발로 서기).
 PIXEL_DOGS_ROWS = ["0=idle", "1=sit", "2=lie", "3=run", "4=walk"]
 
+# 시트 한 장이 캐릭터 하나인 팩들. raw/inbox 에 그 파일이 있으면 잘라 넣는다.
+# (이름, 출처, 크레딧, import_sheet 인자)
+CAT_CREDITS = (
+    "2D Pixel Art Cat Sprites by Elthen - https://elthen.itch.io/2d-pixel-art-cat-sprites"
+    + chr(10) +
+    "Name-your-own-price, commercial use allowed. The artist appreciates a tip.")
+INBOX_SHEETS = [
+    {
+        "file": "Cat Sprite Sheet.png",
+        "name": "cat",
+        "url": "https://elthen.itch.io/2d-pixel-art-cat-sprites",
+        "args": ["--cell", "32x32", "--trim", "--facing", "right",
+                 "--scale", "5", "--fps", "6",
+                 "--row", "4=idle", "--row", "7=walk", "--row", "9=run",
+                 "--row", "0=sit", "--row", "5=lie", "--row", "6=sleep",
+                 "--action-fps", "walk=10", "--action-fps", "run=14",
+                 "--action-fps", "sleep=3", "--action-fps", "lie=5",
+                 "--credits", CAT_CREDITS],
+    },
+]
+
 # 시트 번호는 아무 뜻이 없으므로 털색으로 이름을 붙인다. 트레이 메뉴에 그대로 나온다.
 # 짝수/홀수는 같은 강아지의 두 변형이다 — -tongue 쪽이 혀를 내민 쪽.
 # patch- 는 흰 바탕에 얼룩이 있는 강아지다.
@@ -154,6 +175,28 @@ def pixel_dogs(force: bool) -> int:
     return 0
 
 
+def inbox_sheets(force: bool) -> int:
+    """raw/inbox 에 놓인 시트 한 장짜리 팩들을 잘라 넣는다."""
+    made = []
+    for pack in INBOX_SHEETS:
+        sheet = INBOX / pack["file"]
+        out = SPRITES / pack["name"]
+        if not sheet.exists():
+            print("  " + pack["file"] + " 이 없어 건너뜁니다 (" + pack["url"] + ")")
+            continue
+        if out.exists() and not force:
+            continue
+        shutil.rmtree(out, ignore_errors=True)
+        argv = [str(sheet), "--out", str(out)] + pack["args"]
+        if import_sheet.main(argv) != 0:
+            print("  ! " + pack["name"] + " 을 만들지 못했습니다", file=sys.stderr)
+            return 1
+        made.append(pack["name"])
+    if made:
+        print("  " + ", ".join(made))
+    return 0
+
+
 def download(name: str, url: str, force: bool) -> Path:
     CACHE.mkdir(parents=True, exist_ok=True)
     target = CACHE / name
@@ -201,6 +244,8 @@ def main(argv=None) -> int:
 
     print("3) 직접 받은 팩")
     if pixel_dogs(args.force) != 0:
+        return 1
+    if inbox_sheets(args.force) != 0:
         return 1
 
     print("\n완료. 트레이 > 캐릭터 에서 고를 수 있습니다.")
