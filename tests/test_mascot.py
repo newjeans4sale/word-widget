@@ -280,3 +280,48 @@ def test_frame_index_is_zero_for_a_single_frame():
     run(m, 5)
     assert m.frame_index(fps=8, frame_count=1) == 0
     assert m.frame_index(fps=0, frame_count=4) == 0
+
+
+# --- 늘어난 동작 (run / lie / beg / bark) ---------------------------------
+
+def test_visits_the_new_actions_too():
+    seen = set(run(make(seed=9), 2000))
+    assert set(mascot_mod.WANDER_ACTIONS) <= seen
+
+
+def test_running_is_faster_than_walking():
+    def distance(action):
+        m = make(seed=1)
+        m._begin(action)
+        m.facing = 1
+        m.place(100.0, BOUNDS[2])
+        for _ in range(16):          # 1초
+            m.update(DT, BOUNDS)
+        return m.state.x - 100.0
+    assert distance("run") > distance("walk") * 2
+
+
+def test_standing_actions_do_not_move():
+    for action in ("idle", "sit", "lie", "sleep", "beg", "bark"):
+        m = make(seed=2)
+        m.set_wander(False)          # 다음 동작으로 넘어가지 않게 고정
+        m._begin(action)
+        x0 = m.state.x
+        for _ in range(32):
+            m.update(DT, BOUNDS)
+        assert m.state.x == x0, action
+
+
+def test_a_dog_without_the_fancy_actions_still_works():
+    """허스키처럼 lie/beg/sleep 이 없는 캐릭터도 돌아야 한다."""
+    m = Mascot(rng=random.Random(3), available={"idle", "walk", "run", "sit", "bark"})
+    m.place(500.0, BOUNDS[2])
+    seen = set(run(m, 900))
+    assert seen <= {"idle", "walk", "run", "sit", "bark"}
+    assert "walk" in seen
+
+
+def test_bark_and_beg_are_short():
+    for action in ("bark", "beg"):
+        lo, hi = mascot_mod.DURATIONS[action]
+        assert hi <= 4.0, action

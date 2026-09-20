@@ -28,15 +28,20 @@ from pathlib import Path
 log = logging.getLogger(__name__)
 
 # 상태기계가 쓰는 동작 이름. 이 순서가 폴더 검사 순서이기도 하다.
-ACTIONS = ("idle", "walk", "sit", "sleep", "fall", "drag")
+ACTIONS = ("idle", "walk", "run", "sit", "lie", "sleep", "beg", "bark",
+           "fall", "drag")
 
 # 없는 동작을 무엇으로 대신할지. 그림이 적은 캐릭터도 일단 움직이게 하는 것이 목적이다.
 # 값은 "이 동작이 없으면 다음으로 넘어갈 후보"의 순서다.
 FALLBACK = {
     "idle": (),
     "walk": ("idle",),
+    "run": ("walk", "idle"),
     "sit": ("idle",),
-    "sleep": ("sit", "idle"),
+    "lie": ("sit", "idle"),
+    "sleep": ("lie", "sit", "idle"),
+    "beg": ("idle",),
+    "bark": ("idle",),
     "fall": ("idle",),
     "drag": ("fall", "idle"),
 }

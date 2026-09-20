@@ -47,7 +47,9 @@ PIXEL_DOGS_CREDITS = (
 # 걷기/달리기 행이 한 벌뿐이라 9행이 아니라 7행이다. idle/sit/walk 의 행 번호는
 # 둘 다 같고 sleep(웅크려 자기) 만 마지막 행에 있으므로, 그 행은 찾아서 쓴다.
 PIXEL_DOGS_CELL = (64, 48)
-PIXEL_DOGS_ROWS = ["0=idle", "4=walk", "1=sit"]
+# 두 배치에서 행 번호가 같은 것들. 나머지 둘은 시트 끝에 붙어 있어 찾아서 쓴다:
+# 마지막 행이 sleep(웅크려 자기), 그 바로 앞이 beg(두 발로 서기).
+PIXEL_DOGS_ROWS = ["0=idle", "1=sit", "2=lie", "3=run", "4=walk"]
 
 # 시트 번호는 아무 뜻이 없으므로 털색으로 이름을 붙인다. 트레이 메뉴에 그대로 나온다.
 # 짝수/홀수는 같은 강아지의 두 변형이다 — -tongue 쪽이 혀를 내민 쪽.
@@ -79,9 +81,11 @@ DOWNLOADS = {
 RECIPES = {
     "husky": [
         ["{cache}/dog_medium.png", "--cell", "60x38", "--out", "{out}",
-         "--row", "5=idle", "--row", "1=walk", "--row", "4=sit",
+         "--row", "5=idle", "--row", "1=walk", "--row", "2=run",
+         "--row", "4=sit", "--row", "0=bark",
          "--trim", "--facing", "left", "--scale", "2", "--fps", "6",
-         "--action-fps", "walk=10", "--credits", HUSKY_CREDITS],
+         "--action-fps", "walk=10", "--action-fps", "run=14",
+         "--credits", HUSKY_CREDITS],
     ],
 }
 
@@ -132,12 +136,14 @@ def pixel_dogs(force: bool) -> int:
         shutil.rmtree(out, ignore_errors=True)
         argv = [str(sheet), "--cell", "64x48", "--out", str(out), "--trim",
                 "--facing", "left", "--scale", "2", "--fps", "6",
-                "--action-fps", "walk=10", "--action-fps", "sleep=3",
+                "--action-fps", "walk=10", "--action-fps", "run=14",
+                "--action-fps", "sleep=3", "--action-fps", "lie=4",
                 "--credits", PIXEL_DOGS_CREDITS]
         rows = list(PIXEL_DOGS_ROWS)
         sleep_row = last_content_row(sheet, PIXEL_DOGS_CELL)
-        if sleep_row > 4:
+        if sleep_row > 5:
             rows.append(str(sleep_row) + "=sleep")
+            rows.append(str(sleep_row - 1) + "=beg")
         for row in rows:
             argv += ["--row", row]
         if import_sheet.main(argv) != 0:

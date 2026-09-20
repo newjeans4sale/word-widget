@@ -13,28 +13,45 @@ from dataclasses import dataclass
 
 IDLE = "idle"
 WALK = "walk"
+RUN = "run"
 SIT = "sit"
+LIE = "lie"
 SLEEP = "sleep"
+BEG = "beg"
+BARK = "bark"
 FALL = "fall"
 DRAG = "drag"
 
 # 스스로 오갈 수 있는 동작. FALL/DRAG 는 사용자가 건드릴 때만 들어간다.
-WANDER_ACTIONS = (IDLE, WALK, SIT, SLEEP)
+WANDER_ACTIONS = (IDLE, WALK, RUN, SIT, LIE, SLEEP, BEG, BARK)
+
+# 가로로 움직이는 동작과 그 속도 배수.
+MOVING = {WALK: 1.0, RUN: 2.6}
 
 # 동작이 얼마나 이어지는지 (초). 매번 이 범위에서 균등하게 뽑는다.
 DURATIONS = {
     IDLE: (1.0, 4.0),
     WALK: (2.0, 6.0),
+    RUN: (1.2, 3.5),      # 짧게 뛰고 만다. 오래 뛰면 화면 끝을 계속 오간다
     SIT: (3.0, 8.0),
+    LIE: (5.0, 15.0),
     SLEEP: (10.0, 30.0),
+    BEG: (1.5, 3.5),
+    BARK: (0.8, 1.6),
 }
 
 # 동작이 끝났을 때 다음에 뭘 할지. (동작, 가중치)
+# 쉬는 쪽으로 흐르되 가끔 눈에 띄는 짓을 하게 한다. 짖기/두 발로 서기의 가중치가
+# 낮은 것은 일부러다 — 자주 나오면 시선을 계속 빼앗는다.
 NEXT = {
-    IDLE: ((WALK, 6), (SIT, 3), (IDLE, 1)),
-    WALK: ((IDLE, 5), (WALK, 3), (SIT, 2)),
-    SIT: ((IDLE, 5), (SLEEP, 3), (SIT, 2)),
-    SLEEP: ((IDLE, 1),),
+    IDLE: ((WALK, 6), (SIT, 3), (RUN, 1), (BARK, 1), (BEG, 1), (IDLE, 1)),
+    WALK: ((IDLE, 5), (WALK, 3), (SIT, 2), (RUN, 2)),
+    RUN: ((WALK, 4), (IDLE, 3)),
+    SIT: ((IDLE, 5), (SLEEP, 2), (LIE, 2), (SIT, 2), (BEG, 1)),
+    LIE: ((SLEEP, 3), (IDLE, 3), (SIT, 2)),
+    SLEEP: ((LIE, 2), (IDLE, 1)),
+    BEG: ((IDLE, 2), (BARK, 1)),
+    BARK: ((IDLE, 3), (WALK, 1)),
 }
 
 # 타이머가 밀리거나 절전에서 깨어나면 dt 가 몇 초씩 들어온다. 그대로 적분하면
@@ -151,7 +168,7 @@ class Mascot:
                 # 공중에 뜬 채로 두지 않고 떨어뜨린다.
                 self._begin(FALL)
                 self._fall(dt, floor)
-            elif self.action == WALK:
+            elif self.action in MOVING:
                 self._walk(dt, left, right)
 
         self.x = min(max(self.x, left), right)
@@ -160,7 +177,8 @@ class Mascot:
             self._begin(self._choose_next())
 
     def _walk(self, dt: float, left: float, right: float) -> None:
-        self.x += self.facing * self.walk_speed * dt
+        speed = self.walk_speed * MOVING.get(self.action, 1.0)
+        self.x += self.facing * speed * dt
         if self.x <= left:
             self.x, self.facing = left, 1
         elif self.x >= right:
@@ -186,8 +204,8 @@ class Mascot:
         if action in DURATIONS:
             lo, hi = DURATIONS[action]
             self._remaining = self.rng.uniform(lo, hi)
-            if action == WALK:
-                # 걷기를 시작할 때만 방향을 새로 뽑는다. 매 틱 뽑으면 제자리에서 떤다.
+            if action in MOVING:
+                # 움직이기 시작할 때만 방향을 새로 뽑는다. 매 틱 뽑으면 제자리에서 떤다.
                 self.facing = self.rng.choice((-1, 1))
         else:
             self._remaining = float("inf")
