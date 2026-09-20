@@ -11,6 +11,18 @@ HANGUL = re.compile(r"[가-힣ᄀ-ᇿ㄰-㆏]")
 PHRASES = {"in response to", "in unison"}
 
 
+def clean_word(word):
+    """표제어에서 발음 메모나 꼬리 물결표를 떼어낸다.
+
+    "Volatile 브ㅓㄹ릐덜 (= ...)" 의 발음 메모, "On account of ~때문에" 의 '~' 같은 것들이
+    그대로 남으면 표제어가 달라져 정의와 짝이 안 맞는다.
+    """
+    m = HANGUL.search(word)
+    if m:
+        word = word[:m.start()]
+    return word.strip().rstrip("~").strip()
+
+
 def split_paren_def(line):
     """'Word (= 뜻)' 형태. 뜻 안에 괄호가 또 있을 수 있어 짝을 맞춰 센다."""
     i = line.find("(=")
@@ -27,8 +39,8 @@ def split_paren_def(line):
                 tail = line[j + 1:].strip()
                 word = line[:i].strip()
                 definition = (inside + " " + tail).strip() if tail else inside
-                return word, definition
-    return line[:i].strip(), line[i + 2:].strip()
+                return clean_word(word), definition
+    return clean_word(line[:i]), line[i + 2:].strip()
 
 
 def parse(line):
@@ -57,17 +69,18 @@ def parse(line):
         definition = line[c:].strip()
         if definition.startswith("= "):
             definition = definition[2:].strip()
-        return word, definition
+        return clean_word(word), definition
 
     # 여기까지 왔으면 한글도 괄호도 '=' 도 없는 순수 영어 줄이다.
     # "Construe interpret" 처럼 뒤에 영어 설명이 붙은 경우와
     # "In response to" 처럼 표제어 자체가 여러 단어인 경우를 갈라야 한다.
     if line.lower() in PHRASES:
         return line, None
-    if " / " in line:
-        # "Desiccation / desiccate" 처럼 같은 어근의 다른 품사를 나란히 적은 경우
-        head, _, rest = line.partition(" / ")
-        return head.strip(), "cf. " + rest.strip()
+    head, sep, rest = line.partition(" / ")
+    if sep and " " not in head.strip():
+        # "Desiccation / desiccate" 처럼 한 단어 + 다른 품사형을 나란히 적은 경우.
+        # 앞쪽이 여러 단어면("Interspersed scattered / ...") 설명이 붙은 것이므로 제외한다.
+        return clean_word(head), "cf. " + rest.strip()
     parts = line.split(None, 1)
     if len(parts) == 2 and parts[1][:1].islower():
         return parts[0], parts[1]
