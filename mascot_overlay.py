@@ -121,15 +121,17 @@ class MascotOverlay(QWidget):
         self._bubble_enabled = bool(getattr(cfg, "bubble", True))
         self.mascot.set_wander(bool(getattr(cfg, "mascot_wander", True)))
 
-        self.set_character(getattr(cfg, "character", "dog"),
-                           float(getattr(cfg, "mascot_scale", 1.0)))
-
+        # 위치를 먼저 정한다. 캐릭터를 먼저 불러오면 set_character 안의 _relayout 이
+        # 아직 (0,0) 인 좌표로 창을 잡아서, 화면 밖으로 판정돼 한 번 튕겨 나갔다 온다.
         x = getattr(cfg, "mascot_x", None)
         y = getattr(cfg, "mascot_y", None)
         if x is not None and y is not None:
             self.mascot.place(float(x), float(y))
         else:
             self._place_default()
+
+        self.set_character(getattr(cfg, "character", "dog-00"),
+                           float(getattr(cfg, "mascot_scale", 1.0)))
         self._relayout()
 
     def set_character(self, name: str, scale: float | None = None) -> bool:

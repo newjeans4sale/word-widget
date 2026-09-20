@@ -10,5 +10,6 @@
   "anchor_x": null,
   "anchor_y": null,
   "hide_on_fullscreen": true,
-  "paused": false
+  "paused": false,
+  "mode": "mascot"
 }
