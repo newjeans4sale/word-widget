@@ -231,9 +231,25 @@ class Verifier:
         o.set_hovered(True)
         self.pump(60)
         self.check("커서를 올리면 ‹ › 가 나타난다", not o._prev_rect.isEmpty())
-        self.check("화살표가 말풍선 양 끝에 붙는다",
-                   o._prev_rect.left() == o._bubble.left()
-                   and o._next_rect.right() == o._bubble.right())
+        self.check("화살표가 몸통 위에 얹힌다",
+                   o._body.contains(o._prev_rect) and o._body.contains(o._next_rect))
+
+        # 여기가 핵심이다. 말풍선에 두면 단어가 바뀔 때마다 폭이 변해 창이 리사이즈되고,
+        # 연달아 누르려는 손 밑에서 단추가 도망간다.
+        before = o.mapToGlobal(o._prev_rect.center())
+        for word in ("a", "internationalization", "hi"):
+            o.set_word(word, "뜻")
+            self.pump(60)
+            now = o.mapToGlobal(o._prev_rect.center())
+            if (abs(now.x() - before.x()) > 1) or (now.y() != before.y()):
+                break
+        else:
+            now = before
+        self.check("단어 길이가 바뀌어도 화살표가 제자리에 있다",
+                   abs(now.x() - before.x()) <= 1 and now.y() == before.y())
+        o.set_word("ephemeral", long_meaning)
+        o.set_meaning_visible(True)
+        self.pump(60)
         self.check("호버 영역이 말풍선까지 덮는다",
                    o.hover_rect().contains(o.mapToGlobal(o._bubble.center())))
         self.check("커서가 올라가면 걷기가 멈춘다", o.mascot.wandering is False)
@@ -371,6 +387,13 @@ class Verifier:
                                wa.overlay._word != shown)
                     self.check("화살표를 눌러도 캐릭터가 끌려가지 않는다",
                                wa.overlay.mascot.action != "drag")
+
+                    # 같은 자리를 연달아 눌러도 계속 먹혀야 한다.
+                    again = wa.overlay._word
+                    realinput.click(g.x(), g.y(), self.app.processEvents)
+                    self.pump(300)
+                    self.check("같은 자리를 다시 눌러도 또 넘어간다",
+                               wa.overlay._word != again)
             finally:
                 realinput.restore_cursor(saved)
         finally:

@@ -42,8 +42,12 @@ BUBBLE_PAD_Y = 5
 BUBBLE_RADIUS = 7
 BUBBLE_MAX_W = 520           # 한 줄이 이보다 길면 말줄임
 BUBBLE_LINE_GAP = 1          # 단어 줄과 뜻 줄 사이
-ARROW_W = 22                 # 이전/다음 화살표 한 칸의 폭
+ARROW_W = 22                 # 이전/다음 화살표 단추의 지름
 ARROW_SIZE = 4               # 갈매기표 반쪽 크기
+# 몸통이 이보다 좁으면 단추 둘이 캐릭터를 다 덮어버린다. 그럴 땐 안 그린다.
+ARROW_MIN_BODY = ARROW_W * 3
+# 몸통 높이의 어느 지점에 놓을지. 한가운데면 얼굴을 가려서 조금 내렸다.
+ARROW_Y_RATIO = 0.62
 CLICK_SLOP = 4               # 이만큼 안 움직였으면 드래그가 아니라 클릭
 
 
@@ -325,8 +329,6 @@ class MascotOverlay(QWidget):
             text_w = max(fm.horizontalAdvance(t) for t, _ in self._lines)
             line_h = fm.height() + BUBBLE_LINE_GAP
             bubble_w = math.ceil(text_w) + 2 * BUBBLE_PAD_X
-            if arrows:
-                bubble_w += 2 * ARROW_W
             bubble_h = math.ceil(line_h * len(self._lines)) + 2 * BUBBLE_PAD_Y
             top = bubble_h + BUBBLE_TAIL + BUBBLE_GAP
         else:
@@ -338,11 +340,15 @@ class MascotOverlay(QWidget):
         self._body = QRect((win_w - body_w) // 2, top, body_w, body_h)
         self._bubble = (QRect((win_w - bubble_w) // 2, 0, bubble_w, bubble_h)
                         if bubble_w else QRect())
-        if arrows and bubble_w:
-            b = self._bubble
-            self._prev_rect = QRect(b.left(), b.top(), ARROW_W, b.height())
-            self._next_rect = QRect(b.right() + 1 - ARROW_W, b.top(),
-                                    ARROW_W, b.height())
+        # 화살표는 말풍선이 아니라 **몸통 위**에 얹는다. 말풍선은 단어 길이에 따라
+        # 폭이 변해 창이 리사이즈되고, 그러면 누르는 도중에 단추가 커서 밑에서
+        # 빠져나간다. 몸통은 발밑 기준으로 늘 같은 자리에 있어 흔들리지 않는다.
+        if arrows and self._body.width() >= ARROW_MIN_BODY:
+            b = self._body
+            size = min(ARROW_W, b.height())
+            y = b.top() + int((b.height() - size) * ARROW_Y_RATIO)
+            self._prev_rect = QRect(b.left(), y, size, size)
+            self._next_rect = QRect(b.right() + 1 - size, y, size, size)
         else:
             self._prev_rect = QRect()
             self._next_rect = QRect()
@@ -475,6 +481,9 @@ class MascotOverlay(QWidget):
 
         if self._pixmap is not None:
             p.drawPixmap(self._body.topLeft(), self._pixmap)
+        if not self._prev_rect.isEmpty():
+            self._paint_arrow(p, self._prev_rect, -1, self._can_prev)
+            self._paint_arrow(p, self._next_rect, +1, self._can_next)
         if not self._bubble.isEmpty():
             self._paint_bubble(p)
         p.end()
@@ -504,9 +513,6 @@ class MascotOverlay(QWidget):
         line_h = fm.height() + BUBBLE_LINE_GAP
         left = box.left() + BUBBLE_PAD_X
         width = box.width() - 2 * BUBBLE_PAD_X
-        if not self._prev_rect.isEmpty():
-            left += ARROW_W
-            width -= 2 * ARROW_W
         y = box.top() + BUBBLE_PAD_Y
         for text, color in self._lines:
             p.setPen(color)
@@ -515,12 +521,19 @@ class MascotOverlay(QWidget):
                        text)
             y += line_h
 
-        if not self._prev_rect.isEmpty():
-            self._paint_arrow(p, self._prev_rect, -1, self._can_prev)
-            self._paint_arrow(p, self._next_rect, +1, self._can_next)
-
     def _paint_arrow(self, p, rect: QRect, direction: int, enabled: bool) -> None:
-        """갈매기표를 선으로 그린다. 글꼴에 있는 글자를 쓰면 글꼴마다 크기가 달라진다."""
+        """갈매기표를 선으로 그린다. 글꼴에 있는 글자를 쓰면 글꼴마다 크기가 달라진다.
+
+        캐릭터 그림 위에 얹히므로 뒤에 어두운 원을 깐다. 털색이 밝은 강아지
+        (white, golden) 위에서는 선만으로는 보이지 않는다.
+        """
+        # 배경은 흐리게 하지 않는다. 단추가 있다는 것 자체는 보여야
+        # 왜 눌러도 반응이 없는지 알 수 있다 (흐려진 갈매기표가 그 답이다).
+        backing = QColor(self._bubble_bg)
+        p.setPen(Qt.PenStyle.NoPen)
+        p.setBrush(backing)
+        p.drawEllipse(rect)
+
         color = QColor(self._text_color)
         color.setAlphaF(color.alphaF() * (1.0 if enabled else 0.25))
         pen = QPen(color, 2.0)
