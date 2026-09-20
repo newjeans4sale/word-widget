@@ -41,7 +41,7 @@ class Config:
     # --- 마스코트 모드 ---
     # 두 모드는 위의 키들(간격, 글자, 색, 투명도, 전체화면 숨김)을 함께 쓴다.
     mode: str = "text"
-    character: str = "dog"
+    character: str = "dog-00"
     mascot_scale: float = 1.0
     mascot_wander: bool = True
     mascot_x: int | None = None

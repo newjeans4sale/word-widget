@@ -218,7 +218,7 @@ def test_save_creates_parent_readable_json(tmp_path):
 def test_mascot_defaults(tmp_path):
     cfg, warnings = load(tmp_path / "config.json")
     assert cfg.mode == "text"
-    assert cfg.character == "dog"
+    assert cfg.character == "dog-00"
     assert cfg.mascot_scale == 1.0
     assert cfg.mascot_wander is True
     assert cfg.bubble is True

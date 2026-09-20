@@ -116,7 +116,14 @@ sprites/
 걸을 때 발이 위아래로 떱니다. 그림이 여러 파일에 나뉘어 있으면 두 번째부터
 `--append` 를 붙여 같은 폴더에 이어 넣습니다.
 
-기본 캐릭터(CC0 허스키)는 `tools/fetch_sprites.py` 를 한 번 돌리면 만들어집니다.
+기본 캐릭터는 `tools/fetch_sprites.py` 를 한 번 돌리면 만들어집니다.
+
+- `husky` — [rmazanek, OpenGameArt](https://opengameart.org/content/dog-3), CC0. 바로 내려받습니다.
+- `dog-00` ~ `dog-23` — [Pixel Dogs by Benvictus](https://benvictus.itch.io/pixel-dogs).
+  itch.io 는 '가격을 직접 정하기' 화면을 거치므로 zip 을 직접 받아
+  `raw/inbox/PixelDogsSprites.zip` 에 두어야 합니다. 그러면 24마리를 전부 잘라 넣습니다.
+  CC0 가 아닙니다 — 기부하지 못하면 크레딧을 부탁한다고 되어 있어서
+  각 폴더의 `CREDITS.txt` 에 남겨 둡니다.
 
 ## 설정 — `config.json`
 
@@ -136,7 +143,7 @@ sprites/
 | `hide_on_fullscreen` | `true` | 전체화면 앱 위에서 숨김 |
 | `paused` | `false` | 시작할 때 멈춘 상태로 띄울지 |
 | `mode` | `text` | `text` 또는 `mascot` |
-| `character` | `dog` | `sprites/` 안의 폴더 이름. 없으면 첫 번째 것으로 대체 |
+| `character` | `dog-00` | `sprites/` 안의 폴더 이름. 없으면 첫 번째 것으로 대체 |
 | `mascot_scale` | `1.0` | 캐릭터 크기 배율 (0.25 ~ 4.0). `meta.json` 의 `scale` 에 곱해집니다 |
 | `mascot_wander` | `true` | 스스로 걸어다닐지 |
 | `mascot_x` / `mascot_y` | 자동 | 캐릭터의 마지막 발밑 좌표 |
