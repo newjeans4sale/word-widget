@@ -11,5 +11,9 @@
   "anchor_y": null,
   "hide_on_fullscreen": true,
   "paused": false,
-  "mode": "mascot"
+  "mode": "mascot",
+  "character": "tan",
+  "mascot_scale": 1.0,
+  "mascot_wander": true,
+  "bubble": true
 }

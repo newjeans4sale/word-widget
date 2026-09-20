@@ -49,6 +49,24 @@ PIXEL_DOGS_CREDITS = (
 PIXEL_DOGS_CELL = (64, 48)
 PIXEL_DOGS_ROWS = ["0=idle", "4=walk", "1=sit"]
 
+# 시트 번호는 아무 뜻이 없으므로 털색으로 이름을 붙인다. 트레이 메뉴에 그대로 나온다.
+# 짝수/홀수는 같은 강아지의 두 변형이다 — -tongue 쪽이 혀를 내민 쪽.
+# patch- 는 흰 바탕에 얼룩이 있는 강아지다.
+PIXEL_DOGS_NAMES = {
+    "00": "taupe",       "01": "taupe-tongue",
+    "02": "tan",         "03": "tan-tongue",
+    "04": "slate",       "05": "slate-tongue",
+    "06": "blue",        "07": "blue-tongue",
+    "08": "rust",        "09": "rust-tongue",
+    "10": "white",       "11": "white-tongue",
+    "12": "patch-brown", "13": "patch-brown-tongue",
+    "14": "chocolate",   "15": "chocolate-tongue",
+    "16": "patch-grey",  "17": "patch-grey-tongue",
+    "18": "patch-blue",  "19": "patch-blue-tongue",
+    "20": "patch-tan",   "21": "patch-tan-tongue",
+    "22": "golden",      "23": "golden-tongue",
+}
+
 HUSKY_CREDITS = ("Dog (husky) sprites by rmazanek - CC0 / public domain, "
                  "no attribution required. https://opengameart.org/content/dog-3")
 
@@ -105,7 +123,9 @@ def pixel_dogs(force: bool) -> int:
 
     made = 0
     for sheet in sheets:
-        name = "dog-" + sheet.stem.rsplit("-", 1)[1]
+        index = sheet.stem.rsplit("-", 1)[1]
+        # 이름표에 없는 번호가 나오면(팩이 갱신되면) 번호를 그대로 쓴다.
+        name = PIXEL_DOGS_NAMES.get(index, "dog-" + index)
         out = SPRITES / name
         if out.exists() and not force:
             continue

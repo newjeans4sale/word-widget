@@ -23,7 +23,7 @@ from PySide6.QtWidgets import QWidget
 import platform_win
 import sprites as sprites_mod
 from mascot import Mascot
-from overlay import IS_MAC, MEANING_SEPARATOR, clamp_to_screens, resolve_font_family
+from overlay import IS_MAC, clamp_to_screens, resolve_font_family
 
 log = logging.getLogger(__name__)
 
@@ -40,7 +40,8 @@ BUBBLE_TAIL = 7              # 꼬리 높이
 BUBBLE_PAD_X = 9
 BUBBLE_PAD_Y = 5
 BUBBLE_RADIUS = 7
-BUBBLE_MAX_W = 340           # 이보다 길면 말줄임
+BUBBLE_MAX_W = 520           # 한 줄이 이보다 길면 말줄임
+BUBBLE_LINE_GAP = 1          # 단어 줄과 뜻 줄 사이
 CLICK_SLOP = 4               # 이만큼 안 움직였으면 드래그가 아니라 클릭
 
 
@@ -75,6 +76,9 @@ class MascotOverlay(QWidget):
         self._pixmap = None
         self._body = QRect()          # 창 안에서 캐릭터가 차지하는 영역
         self._bubble = QRect()
+        self._lines: list[tuple[str, QColor]] = []
+        self._hovered = False
+        self._wander_wanted = True
         self._warnings: list[str] = []
 
         self._drag_grab = None        # (누른 지점, 그때의 발밑 좌표)
@@ -119,7 +123,7 @@ class MascotOverlay(QWidget):
         self._bubble_border.setAlphaF(alpha * 0.3)
 
         self._bubble_enabled = bool(getattr(cfg, "bubble", True))
-        self.mascot.set_wander(bool(getattr(cfg, "mascot_wander", True)))
+        self.set_wander(bool(getattr(cfg, "mascot_wander", True)))
 
         # 위치를 먼저 정한다. 캐릭터를 먼저 불러오면 set_character 안의 _relayout 이
         # 아직 (0,0) 인 좌표로 창을 잡아서, 화면 밖으로 판정돼 한 번 튕겨 나갔다 온다.
@@ -164,7 +168,24 @@ class MascotOverlay(QWidget):
         return list(self._warnings)
 
     def set_wander(self, on: bool) -> None:
-        self.mascot.set_wander(on)
+        """트레이의 '산책'. 호버로 잠시 멈춘 것과 구분해서 기억해 둔다."""
+        self._wander_wanted = bool(on)
+        self._apply_wander()
+
+    def set_hovered(self, on: bool) -> None:
+        """커서가 캐릭터 위에 있는 동안은 걷지 않는다.
+
+        뜻을 읽는 중에 걸어서 커서 밑을 빠져나가면 말풍선이 닫혀 버린다.
+        멈춰 세우면 마우스를 올려둔 동안 계속 읽을 수 있다.
+        """
+        on = bool(on)
+        if on == self._hovered:
+            return
+        self._hovered = on
+        self._apply_wander()
+
+    def _apply_wander(self) -> None:
+        self.mascot.set_wander(self._wander_wanted and not self._hovered)
 
     def set_scale(self, scale: float) -> None:
         if self._sprites:
@@ -233,38 +254,26 @@ class MascotOverlay(QWidget):
 
     # --- 레이아웃 -------------------------------------------------------
 
-    def _bubble_parts(self) -> list[tuple[str, QColor]]:
-        if not self._bubble_enabled or not self._word:
-            return []
-        parts = [(self._word, self._text_color)]
-        if self._meaning_visible and self._meaning:
-            parts.append((MEANING_SEPARATOR, self._meaning_color))
-            parts.append((self._meaning, self._meaning_color))
-        return parts
+    def _bubble_lines(self) -> list[tuple[str, QColor]]:
+        """말풍선에 그릴 줄들. 뜻은 단어와 같은 줄에 붙이지 않고 아래로 내린다.
 
-    def _elided_parts(self) -> list[tuple[str, QColor]]:
-        """말풍선이 화면을 가로지르지 않게 뒤에서부터 줄인다."""
-        parts = self._bubble_parts()
-        if not parts:
+        한 줄에 이어 붙이면 말풍선이 화면을 가로질러 버리고, 길이를 제한하면
+        정작 읽고 싶은 뜻이 말줄임으로 잘린다. 줄을 나누면 둘 다 온전히 보인다.
+        """
+        if not self._bubble_enabled or not self._word:
             return []
         fm = QFontMetricsF(self._font)
         limit = BUBBLE_MAX_W - 2 * BUBBLE_PAD_X
-        total = sum(fm.horizontalAdvance(t) for t, _ in parts)
-        if total <= limit:
-            return parts
-        out, used = [], 0.0
-        for text, color in parts:
-            width = fm.horizontalAdvance(text)
-            if used + width <= limit:
-                out.append((text, color))
-                used += width
-                continue
-            remaining = max(0.0, limit - used)
-            clipped = fm.elidedText(text, Qt.TextElideMode.ElideRight, remaining)
-            if clipped:
-                out.append((clipped, color))
-            break
-        return out or [parts[0]]
+
+        def fit(text: str) -> str:
+            if fm.horizontalAdvance(text) <= limit:
+                return text
+            return fm.elidedText(text, Qt.TextElideMode.ElideRight, limit)
+
+        lines = [(fit(self._word), self._text_color)]
+        if self._meaning_visible and self._meaning:
+            lines.append((fit(self._meaning), self._meaning_color))
+        return lines
 
     def _relayout(self) -> None:
         """창 크기와 내부 배치를 다시 잡는다. 그림이나 글자가 바뀔 때만 부른다."""
@@ -279,12 +288,15 @@ class MascotOverlay(QWidget):
         body_w = self._pixmap.width() if self._pixmap else 32
         body_h = self._pixmap.height() if self._pixmap else 32
 
-        parts = self._elided_parts()
-        if parts:
+        # 그릴 줄을 여기서 확정해 두고 paintEvent 는 그대로 쓴다.
+        # 재는 쪽과 그리는 쪽이 따로 계산하면 한쪽만 바뀌었을 때 글자가 잘린다.
+        self._lines = self._bubble_lines()
+        if self._lines:
             fm = QFontMetricsF(self._font)
-            text_w = sum(fm.horizontalAdvance(t) for t, _ in parts)
+            text_w = max(fm.horizontalAdvance(t) for t, _ in self._lines)
+            line_h = fm.height() + BUBBLE_LINE_GAP
             bubble_w = math.ceil(text_w) + 2 * BUBBLE_PAD_X
-            bubble_h = math.ceil(fm.height()) + 2 * BUBBLE_PAD_Y
+            bubble_h = math.ceil(line_h * len(self._lines)) + 2 * BUBBLE_PAD_Y
             top = bubble_h + BUBBLE_TAIL + BUBBLE_GAP
         else:
             bubble_w = bubble_h = 0
@@ -433,14 +445,16 @@ class MascotOverlay(QWidget):
 
         fm = QFontMetricsF(self._font)
         p.setFont(self._font)
-        x = box.left() + BUBBLE_PAD_X
         p.setBrush(Qt.BrushStyle.NoBrush)
-        for text, color in self._elided_parts():
+        line_h = fm.height() + BUBBLE_LINE_GAP
+        y = box.top() + BUBBLE_PAD_Y
+        for text, color in self._lines:
             p.setPen(color)
-            p.drawText(QRectF(x, box.top(), fm.horizontalAdvance(text) + 2, box.height()),
+            p.drawText(QRectF(box.left() + BUBBLE_PAD_X, y,
+                              box.width() - 2 * BUBBLE_PAD_X, line_h),
                        int(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter),
                        text)
-            x += fm.horizontalAdvance(text)
+            y += line_h
 
     # --- 창 수명 ---------------------------------------------------------
 

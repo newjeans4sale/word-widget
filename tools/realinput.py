@@ -58,6 +58,12 @@ def restore_cursor(pos: tuple[int, int]) -> None:
     _u32.SetCursorPos(pos[0], pos[1])
 
 
+def move(x: int, y: int) -> None:
+    """커서를 옮긴다. SetCursorPos 가 아니라 SendInput 을 쓰는 이유는,
+    SetCursorPos 는 마우스 이동 이벤트를 만들지 않아 호버 판정이 안 걸리기 때문이다."""
+    _send(MOUSEEVENTF_MOVE | MOUSEEVENTF_ABSOLUTE, x, y)
+
+
 def drag(start: tuple[int, int], end: tuple[int, int], pump, steps: int = 6) -> None:
     """start 에서 눌러 end 까지 끌고 놓는다. pump 는 매 단계 이벤트 루프를 돌린다."""
     sx, sy = start

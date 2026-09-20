@@ -371,11 +371,17 @@ class WidgetApp:
         if self._move_mode or not self.overlay.isVisible():
             self._clear_hover()
             return
+
+        inside = self.overlay.hover_rect().contains(QCursor.pos())
+        if self.mascot_mode:
+            # 뜻이 없는 단어에서도 멈춘다. 가리키면 서는 편이 자연스럽고,
+            # 뜻이 있는 단어로 바뀌는 순간 이미 서 있어야 읽을 수 있다.
+            self.overlay.set_hovered(inside)
         if not self.overlay.has_meaning:
             self._hover_ticks = 0
             return
 
-        if self.overlay.hover_rect().contains(QCursor.pos()):
+        if inside:
             self._hover_ticks += 1
             if self._hover_ticks >= HOVER_DWELL_TICKS and not self.overlay.meaning_visible:
                 self.overlay.set_meaning_visible(True)
@@ -385,6 +391,8 @@ class WidgetApp:
 
     def _clear_hover(self) -> None:
         self._hover_ticks = 0
+        if self.mascot_mode:
+            self.overlay.set_hovered(False)
         if self.overlay.meaning_visible:
             self.overlay.set_meaning_visible(False)
             self._apply_timer()

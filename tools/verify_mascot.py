@@ -195,6 +195,42 @@ class Verifier:
         self.pump(1500)
         self.check("산책을 끄면 그 자리에 선다", o.position[0] == held)
 
+    # --- 5b. 말풍선과 호버 ---------------------------------------------------
+
+    def step_bubble(self) -> None:
+        print("[5b] 말풍선과 호버")
+        o = self.overlay
+        long_meaning = "덧없는, 단명하는, 하루살이 같은, 오래가지 못하는"
+        o.set_word("ephemeral", long_meaning)
+        o.set_meaning_visible(False)
+        self.pump(80)
+        self.check("뜻을 감추면 한 줄", len(o._lines) == 1)
+
+        o.set_meaning_visible(True)
+        self.pump(80)
+        self.check("뜻을 보이면 두 줄 (한 줄에 이어 붙이지 않는다)", len(o._lines) == 2)
+        drawn = o._lines[1][0] if len(o._lines) > 1 else ""
+        print("        뜻 줄: " + drawn)
+        self.check("긴 뜻이 잘리지 않는다", drawn == long_meaning)
+        self.check("말풍선이 화면을 가로지르지 않는다", o.width() <= 560)
+
+        o.set_wander(True)
+        o.set_hovered(True)
+        self.check("커서가 올라가면 걷기가 멈춘다", o.mascot.wandering is False)
+        held = o.position[0]
+        self.pump(1200)
+        self.check("멈춘 동안 제자리", o.position[0] == held)
+        o.set_hovered(False)
+        self.check("커서가 벗어나면 다시 걷는다", o.mascot.wandering is True)
+        o.set_wander(False)
+        o.set_hovered(False)
+        # 트레이에서 산책을 끈 상태라면 호버가 풀려도 계속 서 있어야 한다.
+        o.set_hovered(True)
+        o.set_hovered(False)
+        self.check("산책이 꺼져 있으면 호버가 풀려도 계속 선다",
+                   o.mascot.wandering is False)
+        o.set_word("ephemeral", "덧없는")
+
     # --- 6. 캐릭터 교체 -----------------------------------------------------
 
     def step_switch(self) -> None:
@@ -283,6 +319,25 @@ class Verifier:
             self.pump(400)
             self.check("다시 마스코트로 (왕복해도 멀쩡)",
                        isinstance(wa.overlay, MascotOverlay) and wa.overlay.isVisible())
+
+            # 실제로 커서를 올려 두고, 걸어서 도망가지 않는지 본다.
+            saved = realinput.cursor_pos()
+            try:
+                # 회전을 멈추지 않으면 5초마다 단어가 바뀌면서 뜻 없는 단어가 걸릴 수
+                # 있다. 여기서 보려는 것은 '커서를 올려 둔 동안 유지되는가' 뿐이다.
+                wa.tray.pause_toggled.emit(True)
+                self.pump(150)
+                wa.overlay.set_word("ephemeral", "덧없는, 단명하는")
+                self.pump(200)
+                center = wa.overlay.mapToGlobal(wa.overlay._body.center())
+                realinput.move(center.x(), center.y())
+                self.pump(2000)
+                self.check("커서를 올려 두면 걸어서 도망가지 않는다",
+                           wa.overlay.hover_rect().contains(center))
+                self.check("올려 둔 동안 뜻이 계속 보인다",
+                           wa.overlay.meaning_visible)
+            finally:
+                realinput.restore_cursor(saved)
         finally:
             wa.shutdown()
             self.pump(200)
@@ -322,6 +377,7 @@ class Verifier:
             self.step_hit_test()
             self.step_drag()
             self.step_walk()
+            self.step_bubble()
             self.step_switch()
             self.step_capture()
             self.step_mode_switch()
