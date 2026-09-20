@@ -443,6 +443,13 @@ class WordOverlay(QWidget):
             except (RuntimeError, TypeError):
                 pass
 
+    def hover_rect(self) -> QRect:
+        """마우스가 여기 머물면 뜻을 보여준다.
+
+        마스코트 오버레이와 맞추기 위한 것이다. 텍스트 창은 글자 말고는 아무것도
+        없으므로 창 전체가 그대로 판정 영역이다."""
+        return self.geometry()
+
     @property
     def anchor_state(self):
         return self._anchor_x, self._anchor_y, self._anchor

@@ -211,3 +211,56 @@ def test_save_creates_parent_readable_json(tmp_path):
     cfgmod.save(p, cfg)
     text = p.read_text(encoding="utf-8")
     assert "\n" in text, "indent=2 로 사람이 읽을 수 있게 저장한다"
+
+
+# --- 마스코트 키 --------------------------------------------------------
+
+def test_mascot_defaults(tmp_path):
+    cfg, warnings = load(tmp_path / "config.json")
+    assert cfg.mode == "text"
+    assert cfg.character == "dog"
+    assert cfg.mascot_scale == 1.0
+    assert cfg.mascot_wander is True
+    assert cfg.bubble is True
+    assert cfg.mascot_x is None and cfg.mascot_y is None
+    assert warnings == []
+
+
+def test_mascot_roundtrip(tmp_path):
+    p = tmp_path / "config.json"
+    cfg, _ = load(p)
+    cfg.mode = "mascot"
+    cfg.character = "husky"
+    cfg.mascot_scale = 2.5
+    cfg.mascot_wander = False
+    cfg.mascot_x, cfg.mascot_y = -1500, 1040
+    cfg.bubble = False
+    cfgmod.save(p, cfg)
+    again, warnings = load(p)
+    assert again == cfg
+    assert warnings == []
+
+
+def test_unknown_mode_falls_back(tmp_path):
+    p = tmp_path / "config.json"
+    write_json(p, {"mode": "hologram"})
+    cfg, warnings = load(p)
+    assert cfg.mode == "text"
+    assert warnings
+
+
+def test_mascot_scale_is_clamped(tmp_path):
+    p = tmp_path / "config.json"
+    write_json(p, {"mascot_scale": 99})
+    cfg, warnings = load(p)
+    assert cfg.mascot_scale == cfgmod.MASCOT_SCALE_RANGE[1]
+    assert warnings
+
+
+def test_negative_mascot_x_is_kept(tmp_path):
+    # 두 번째 모니터가 x = -1920 에 있다. 0으로 깎으면 위젯이 순간이동한다.
+    p = tmp_path / "config.json"
+    write_json(p, {"mascot_x": -1800, "mascot_y": 1040})
+    cfg, warnings = load(p)
+    assert (cfg.mascot_x, cfg.mascot_y) == (-1800, 1040)
+    assert warnings == []

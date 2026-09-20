@@ -16,6 +16,8 @@ MIN_FONT_PT = 6
 INTERVAL_RANGE = (1.0, 3600.0)
 OPACITY_RANGE = (0.1, 1.0)
 ANCHORS = ("top-left", "top-right", "bottom-left", "bottom-right")
+MODES = ("text", "mascot")
+MASCOT_SCALE_RANGE = (0.25, 4.0)
 
 # #rgb / #rrggbb / #aarrggbb
 _COLOR_RE = re.compile(r"^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$")
@@ -35,6 +37,16 @@ class Config:
     anchor_y: int | None = None
     hide_on_fullscreen: bool = True
     paused: bool = False
+
+    # --- 마스코트 모드 ---
+    # 두 모드는 위의 키들(간격, 글자, 색, 투명도, 전체화면 숨김)을 함께 쓴다.
+    mode: str = "text"
+    character: str = "dog"
+    mascot_scale: float = 1.0
+    mascot_wander: bool = True
+    mascot_x: int | None = None
+    mascot_y: int | None = None
+    bubble: bool = True
 
 
 # --- 값 강제 변환 -------------------------------------------------------
@@ -152,6 +164,15 @@ def load(path, max_font_pt: float = 18.0) -> tuple[Config, list[str]]:
                                  raw.get("hide_on_fullscreen", d.hide_on_fullscreen),
                                  d.hide_on_fullscreen, warnings),
         paused=_flag("paused", raw.get("paused", d.paused), d.paused, warnings),
+        mode=_choice("mode", raw.get("mode", d.mode), d.mode, MODES, warnings),
+        character=_text("character", raw.get("character", d.character), d.character, warnings),
+        mascot_scale=_num("mascot_scale", raw.get("mascot_scale", d.mascot_scale),
+                          d.mascot_scale, *MASCOT_SCALE_RANGE, warnings=warnings),
+        mascot_wander=_flag("mascot_wander", raw.get("mascot_wander", d.mascot_wander),
+                            d.mascot_wander, warnings),
+        mascot_x=_coord("mascot_x", raw.get("mascot_x"), warnings),
+        mascot_y=_coord("mascot_y", raw.get("mascot_y"), warnings),
+        bubble=_flag("bubble", raw.get("bubble", d.bubble), d.bubble, warnings),
     )
     return cfg, warnings
 

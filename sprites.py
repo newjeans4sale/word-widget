@@ -280,6 +280,11 @@ class SpriteSet:
         return self.spec.name
 
     @property
+    def scale(self) -> float:
+        """설정에서 준 배율. meta.json 의 배율은 여기에 곱해진다."""
+        return self._scale
+
+    @property
     def total_scale(self) -> float:
         """meta.json 의 배율과 설정의 배율을 곱한 최종 배율."""
         return self.spec.scale * self._scale

@@ -8,8 +8,8 @@ import logging
 import sys
 
 from PySide6.QtCore import QObject, Qt, QTimer, Signal
-from PySide6.QtGui import (QAction, QColor, QFont, QFontMetricsF, QIcon, QPainter,
-                           QPainterPath, QPixmap)
+from PySide6.QtGui import (QAction, QActionGroup, QColor, QFont, QFontMetricsF, QIcon,
+                           QPainter, QPainterPath, QPixmap)
 from PySide6.QtWidgets import QMenu, QSystemTrayIcon
 
 log = logging.getLogger(__name__)
@@ -82,6 +82,9 @@ class TrayController(QObject):
 
     pause_toggled = Signal(bool)
     move_mode_toggled = Signal(bool)
+    mascot_mode_toggled = Signal(bool)
+    wander_toggled = Signal(bool)
+    character_selected = Signal(str)
     autostart_toggled = Signal(bool)
     next_word = Signal()
     reset_requested = Signal()
@@ -103,6 +106,13 @@ class TrayController(QObject):
         self.act_next = self._add_action("다음 단어", self.next_word)
         self.menu.addSeparator()
         self.act_move = self._add_check("이동 · 크기 조정", self.move_mode_toggled)
+        self.menu.addSeparator()
+        self.act_mascot = self._add_check("마스코트 모드", self.mascot_mode_toggled)
+        self.act_wander = self._add_check("산책", self.wander_toggled)
+        self.character_menu = self.menu.addMenu("캐릭터")
+        self._character_group = QActionGroup(self)
+        self._character_group.setExclusive(True)
+        self.set_characters([], None)
         self.menu.addSeparator()
         self.act_reload = self._add_action("다시 불러오기 (단어+설정)", self.reload_requested)
         self.act_open_words = self._add_action("단어 목록 열기", self.open_words)
@@ -129,6 +139,42 @@ class TrayController(QObject):
         action.toggled.connect(signal.emit)
         self.menu.addAction(action)
         return action
+
+    def set_characters(self, names, current: str | None) -> None:
+        """'캐릭터' 서브메뉴를 다시 만든다. 폴더가 늘어날 수 있으므로 매번 새로 짓는다."""
+        for action in list(self._character_group.actions()):
+            self._character_group.removeAction(action)
+            action.deleteLater()
+        self.character_menu.clear()
+
+        if not names:
+            empty = self.character_menu.addAction("(sprites 폴더가 비어 있음)")
+            empty.setEnabled(False)
+            return
+        for name in names:
+            action = QAction(name, self)
+            action.setCheckable(True)
+            action.setChecked(name == current)
+            # name 을 기본 인자로 묶지 않으면 마지막 이름만 전달된다.
+            action.triggered.connect(
+                lambda checked, n=name: checked and self.character_selected.emit(n))
+            self._character_group.addAction(action)
+            self.character_menu.addAction(action)
+
+    def set_mode(self, mascot: bool) -> None:
+        """모드에 따라 쓸모없는 항목을 감춘다.
+
+        마스코트는 잡아 끌면 되므로 '이동 · 크기 조정'이 필요 없고, 텍스트 모드에는
+        산책도 캐릭터도 없다."""
+        mascot = bool(mascot)
+        # 체크 상태를 코드로 맞추는 것이므로 신호를 막는다. 안 막으면 토글이 다시
+        # app 으로 돌아와 모드 전환이 되풀이된다.
+        self.act_mascot.blockSignals(True)
+        self.act_mascot.setChecked(mascot)
+        self.act_mascot.blockSignals(False)
+        self.act_move.setVisible(not mascot)
+        self.act_wander.setVisible(mascot)
+        self.character_menu.menuAction().setVisible(mascot)
 
     # --- 수명 ----------------------------------------------------------
 

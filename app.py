@@ -11,6 +11,7 @@ from PySide6.QtGui import QCursor, QDesktopServices
 
 import config as config_mod
 import fullscreen
+import mascot_overlay
 import osfont
 import platform_win
 from overlay import WordOverlay
@@ -48,8 +49,8 @@ class WidgetApp:
         if self.source.error:
             log.warning("단어 목록: %s", self.source.error)
 
-        self.overlay = WordOverlay(self.cfg)
-        self.overlay.set_font_limits(config_mod.MIN_FONT_PT, int(self.max_font_pt))
+        self.sprites_dir = self.base_dir / "sprites"
+        self.overlay = self._make_overlay()
         self.tray = TrayController()
 
         self._paused = bool(self.cfg.paused)
@@ -86,8 +87,70 @@ class WidgetApp:
         t.autostart_toggled.connect(self._on_autostart)
         t.quit_requested.connect(self.quit)
         t.became_available.connect(self._on_tray_available)
-        self.overlay.moved.connect(self._on_moved)
-        self.overlay.font_size_changed.connect(self._on_font_resized)
+        t.mascot_mode_toggled.connect(self._on_mascot_mode)
+        t.wander_toggled.connect(self._on_wander)
+        t.character_selected.connect(self._on_character)
+        self._wire_overlay()
+
+    # --- 오버레이 만들기 / 갈아끼우기 --------------------------------------
+
+    @property
+    def mascot_mode(self) -> bool:
+        """설정값이 아니라 지금 실제로 떠 있는 창을 본다.
+
+        캐릭터가 없어 마스코트를 못 만들면 설정이 'mascot' 이어도 텍스트가 떠 있다."""
+        return isinstance(self.overlay, mascot_overlay.MascotOverlay)
+
+    def _make_overlay(self):
+        """모드에 맞는 오버레이. 마스코트를 만들 수 없으면 텍스트로 물러난다."""
+        if self.cfg.mode == "mascot":
+            if mascot_overlay.available(self.sprites_dir):
+                overlay = mascot_overlay.MascotOverlay(self.cfg, self.sprites_dir)
+                self._pending_warnings.extend(overlay.warnings)
+                return overlay
+            warning = ("캐릭터가 없어 텍스트 모드로 시작합니다.\n"
+                       "tools/fetch_sprites.py 를 한 번 실행해 주세요")
+            log.warning("%s (%s)", warning, self.sprites_dir)
+            self._pending_warnings.append(warning)
+            self.cfg.mode = "text"
+        overlay = WordOverlay(self.cfg)
+        overlay.set_font_limits(config_mod.MIN_FONT_PT, int(self.max_font_pt))
+        return overlay
+
+    def _wire_overlay(self) -> None:
+        """오버레이는 갈아끼워지므로 트레이 배선과 분리해 둔다."""
+        o = self.overlay
+        if self.mascot_mode:
+            o.moved.connect(self._on_mascot_moved)
+            o.clicked.connect(self.next_word)
+        else:
+            o.moved.connect(self._on_moved)
+            o.font_size_changed.connect(self._on_font_resized)
+
+    def _rebuild_overlay(self) -> None:
+        old = self.overlay
+        self.overlay = self._make_overlay()
+        if old is not None:
+            old.hide()
+            old.deleteLater()
+        self._move_mode = False
+        self._wire_overlay()
+        if not self.tray.available:
+            self.overlay.context_menu = self.tray.menu
+        if not self._hidden_by_fullscreen:
+            self.overlay.show()
+        self.next_word()
+        self._sync_tray_mode()
+        self._flush_warnings()
+
+    def _sync_tray_mode(self) -> None:
+        self.tray.set_mode(self.mascot_mode)
+        self.tray.set_characters(
+            mascot_overlay.available(self.sprites_dir),
+            self.overlay.character if self.mascot_mode else None)
+        self.tray.act_wander.blockSignals(True)
+        self.tray.act_wander.setChecked(bool(self.cfg.mascot_wander))
+        self.tray.act_wander.blockSignals(False)
 
     # --- 기동 / 종료 ----------------------------------------------------
 
@@ -99,6 +162,7 @@ class WidgetApp:
             self.tray.act_autostart.setChecked(platform_win.is_autostart_enabled())
             self.tray.act_autostart.blockSignals(False)
 
+        self._sync_tray_mode()
         self.next_word()
         self.overlay.show()
 
@@ -114,9 +178,7 @@ class WidgetApp:
         if not self.config_path.exists():
             self._save_config()
 
-        for w in self._pending_warnings:
-            self.tray.notify("설정을 일부 되돌렸습니다", w)
-        self._pending_warnings.clear()
+        self._flush_warnings()
         if self.source.error:
             self.tray.notify("단어 목록을 읽지 못했습니다",
                              self.source.error + "\n" + str(self.words_path))
@@ -164,17 +226,51 @@ class WidgetApp:
         self.overlay.set_move_mode(self._move_mode)
         self._apply_timer()
 
+    def _on_mascot_mode(self, on: bool) -> None:
+        want = "mascot" if on else "text"
+        if want == self.cfg.mode and bool(on) == self.mascot_mode:
+            return
+        self.cfg.mode = want
+        self._rebuild_overlay()   # 만들지 못하면 _make_overlay 가 text 로 되돌린다
+        self._apply_timer()
+        self._save_config()
+
+    def _on_wander(self, on: bool) -> None:
+        self.cfg.mascot_wander = bool(on)
+        if self.mascot_mode:
+            self.overlay.set_wander(on)
+        self._save_config()
+
+    def _on_character(self, name: str) -> None:
+        if not self.mascot_mode:
+            return
+        if self.overlay.set_character(name):
+            self.cfg.character = self.overlay.character
+            self._save_config()
+        else:
+            self.tray.notify("캐릭터를 바꾸지 못했습니다", name)
+
+    def _on_mascot_moved(self, x: int, y: int) -> None:
+        self.cfg.mascot_x, self.cfg.mascot_y = x, y
+        self._save_config()
+
     def _on_moved(self, x: int, y: int, anchor: str) -> None:
         self.cfg.anchor_x, self.cfg.anchor_y, self.cfg.anchor = x, y, anchor
         self._save_config()
 
     def _on_reload(self) -> None:
         cfg, warnings = config_mod.load(self.config_path, self.max_font_pt)
+        mode_changed = (cfg.mode == "mascot") != self.mascot_mode
         self.cfg = cfg
         self.words_path = self._resolve_words_path()
         words_ok = self.source.reload_from_file(self.words_path)
 
-        self.overlay.apply_config(cfg)
+        if mode_changed:
+            # 모드가 바뀌면 창 종류가 다르다. 설정만 다시 먹일 수는 없다.
+            self._rebuild_overlay()
+        else:
+            self.overlay.apply_config(cfg)
+            self._sync_tray_mode()
         self._paused = bool(cfg.paused)
         self.tray.act_pause.setChecked(self._paused)
         self._apply_timer()
@@ -249,7 +345,16 @@ class WidgetApp:
 
     # --- 저장 -----------------------------------------------------------
 
+    def _flush_warnings(self, title: str = "설정을 일부 되돌렸습니다") -> None:
+        for w in self._pending_warnings:
+            self.tray.notify(title, w)
+        self._pending_warnings.clear()
+
     def _save_config(self) -> None:
+        # 마스코트는 계속 걸어다니므로 저장 직전의 자리를 그대로 담는다.
+        # (apply_config 가 먼저 도는 '되돌리기' 경로에서는 기본 위치가 담긴다)
+        if self.mascot_mode:
+            self.cfg.mascot_x, self.cfg.mascot_y = self.overlay.position
         try:
             config_mod.save(self.config_path, self.cfg)
         except OSError:
@@ -270,7 +375,7 @@ class WidgetApp:
             self._hover_ticks = 0
             return
 
-        if self.overlay.geometry().contains(QCursor.pos()):
+        if self.overlay.hover_rect().contains(QCursor.pos()):
             self._hover_ticks += 1
             if self._hover_ticks >= HOVER_DWELL_TICKS and not self.overlay.meaning_visible:
                 self.overlay.set_meaning_visible(True)
@@ -311,9 +416,14 @@ class WidgetApp:
         """
         words_file = self.cfg.words_file
         paused = self.cfg.paused
+        mode, character = self.cfg.mode, self.cfg.character
+        wander = self.cfg.mascot_wander
         self.cfg = config_mod.Config()
         self.cfg.words_file = words_file
         self.cfg.paused = paused
+        # 모드와 캐릭터는 '무엇을 보여줄지'이지 '모양·위치'가 아니다.
+        self.cfg.mode, self.cfg.character = mode, character
+        self.cfg.mascot_wander = wander
         self.cfg.font_size_pt = min(self.cfg.font_size_pt, int(self.max_font_pt))
 
         self.overlay.apply_config(self.cfg)

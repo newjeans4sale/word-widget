@@ -30,13 +30,9 @@ SPRITES = ROOT / "sprites"
 
 DOG_CREDITS = ("Dog (husky) sprites by rmazanek - CC0 / public domain, "
                "no attribution required. https://opengameart.org/content/dog-3")
-ANIME_CREDITS = ("Anime Girl by Hordana - CC0 / public domain, "
-                 "no attribution required. https://opengameart.org/content/anime-girl")
 
 DOWNLOADS = {
     "dog_medium.png": "https://opengameart.org/sites/default/files/dog_medium.png",
-    "anime_walk.png": "https://opengameart.org/sites/default/files/11walk_4.png",
-    "anime_blink.png": "https://opengameart.org/sites/default/files/blink%20strip%205.png",
 }
 
 # 캐릭터마다 (출력폴더, [import_sheet 인자들]).
@@ -47,14 +43,6 @@ RECIPES = {
          "--row", "5=idle", "--row", "1=walk", "--row", "4=sit",
          "--trim", "--facing", "left", "--scale", "2", "--fps", "6",
          "--action-fps", "walk=10", "--credits", DOG_CREDITS],
-    ],
-    "anime": [
-        ["{cache}/anime_blink.png", "--cell", "221x221", "--out", "{out}",
-         "--row", "0=idle", "--trim", "--facing", "right", "--scale", "0.5",
-         "--fps", "6", "--action-fps", "idle=4", "--credits", ANIME_CREDITS],
-        ["{cache}/anime_walk.png", "--cell", "250x221", "--out", "{out}",
-         "--row", "0=walk", "--trim", "--append",
-         "--action-fps", "walk=12", "--credits", ANIME_CREDITS],
     ],
 }
 
