@@ -280,3 +280,79 @@ def test_reload_updates_meanings(tmp_path):
 def test_unknown_word_has_no_meaning(tmp_path):
     s = src(make(tmp_path, "alpha, 첫째\n"))
     assert s.meaning("없는단어") is None
+
+
+# --- 히스토리 (이전/다음) -------------------------------------------------
+
+def from_words(words, seed=0):
+    return ws.WordSource(words, rng=random.Random(seed))
+
+
+def test_no_history_at_the_start():
+    s = from_words(["a", "b", "c"])
+    assert s.can_prev is False
+    assert s.prev() is None
+    assert s.history == []
+
+
+def test_prev_walks_back_through_what_was_shown():
+    s = from_words(["a", "b", "c", "d"])
+    seen = [s.next() for _ in range(4)]
+    assert s.can_prev is True
+    back = [s.prev() for _ in range(3)]
+    assert back == seen[-2::-1]
+    assert s.can_prev is False
+    assert s.prev() is None
+
+
+def test_next_after_prev_replays_instead_of_drawing():
+    """되돌아간 뒤의 '다음'은 새 단어가 아니라 왔던 길이어야 한다."""
+    s = from_words(["a", "b", "c", "d", "e"])
+    seen = [s.next() for _ in range(4)]
+    s.prev(); s.prev()
+    assert s.next() == seen[2]
+    assert s.next() == seen[3]
+    # 끝에 닿으면 그때부터 새로 뽑는다
+    fresh = s.next()
+    assert s.history == seen + [fresh]
+
+
+def test_current_follows_the_cursor():
+    s = from_words(["a", "b", "c"])
+    assert s.current() is None
+    first = s.next()
+    assert s.current() == first
+    second = s.next()
+    assert s.current() == second
+    assert s.prev() == first
+    assert s.current() == first
+
+
+def test_history_is_capped():
+    s = from_words(["a", "b", "c"])
+    for _ in range(ws.HISTORY_LIMIT + 50):
+        s.next()
+    assert len(s.history) == ws.HISTORY_LIMIT
+    # 잘라낸 뒤에도 커서가 끝을 가리켜야 한다
+    assert s.current() == s.history[-1]
+    assert s.can_prev is True
+
+
+def test_reload_clears_history(tmp_path):
+    p = tmp_path / "words.txt"
+    p.write_text("a\nb\nc\n", encoding="utf-8")
+    s = ws.WordSource.from_file(p, rng=random.Random(0))
+    s.next(); s.next()
+    p.write_text("x\ny\nz\n", encoding="utf-8")
+    assert s.reload_from_file(p) is True
+    # 지워진 단어로 되돌아갈 수 있으면 안 된다
+    assert s.history == []
+    assert s.can_prev is False
+
+
+def test_empty_source_has_no_history():
+    s = from_words([])
+    assert s.next() == ws.GUIDE_TEXT
+    assert s.history == []
+    assert s.can_prev is False
+    assert s.can_next is False

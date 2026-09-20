@@ -87,6 +87,7 @@ class TrayController(QObject):
     character_selected = Signal(str)
     autostart_toggled = Signal(bool)
     next_word = Signal()
+    prev_word = Signal()
     reset_requested = Signal()
     reload_requested = Signal()
     open_words = Signal()
@@ -103,6 +104,7 @@ class TrayController(QObject):
         self._retry_timer: QTimer | None = None
 
         self.act_pause = self._add_check("일시정지", self.pause_toggled)
+        self.act_prev = self._add_action("이전 단어", self.prev_word)
         self.act_next = self._add_action("다음 단어", self.next_word)
         self.menu.addSeparator()
         self.act_move = self._add_check("이동 · 크기 조정", self.move_mode_toggled)

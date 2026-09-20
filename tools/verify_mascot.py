@@ -152,15 +152,24 @@ class Verifier:
         o = self.overlay
         saved = realinput.cursor_pos()
         try:
-            before = o.position
-            center = o.mapToGlobal(o._body.center())
-            target = (center.x() - 220, center.y() - 160)
-            print(f"        잡는 지점 ({center.x()},{center.y()})  ->  {target}")
-            realinput.drag((center.x(), center.y()), target, self.app.processEvents)
-            self.pump(120)
-            after = o.position
-            print(f"        발밑 {before} -> {after}  (동작 {self.mascot_action(o)})")
-            self.check("몸통을 잡고 끌면 따라온다", abs(after[0] - before[0]) > 100)
+            # 합성 입력은 가끔 버튼 누름을 흘린다(그러면 캐릭터가 꿈쩍도 안 한다).
+            # 사람이 끄는 것과 달리 한 번에 끝나므로, 안 잡혔으면 한 번 더 해 본다.
+            moved = 0
+            for attempt in range(2):
+                before = o.position
+                center = o.mapToGlobal(o._body.center())
+                target = (center.x() - 220, center.y() - 160)
+                realinput.drag((center.x(), center.y()), target,
+                               self.app.processEvents)
+                self.pump(120)
+                after = o.position
+                moved = abs(after[0] - before[0])
+                print(f"        {attempt + 1}차: 발밑 {before} -> {after} "
+                      f"(동작 {self.mascot_action(o)}, {moved}px)")
+                if moved > 100:
+                    break
+                self.pump(1200)     # 착지시키고 다시
+            self.check("몸통을 잡고 끌면 따라온다", moved > 100)
 
             floor = self._floor_for(o)
             self.check("놓으면 떨어진다 (FALL 상태)", o.mascot.action in ("fall", "idle"))
@@ -214,8 +223,19 @@ class Verifier:
         self.check("긴 뜻이 잘리지 않는다", drawn == long_meaning)
         self.check("말풍선이 화면을 가로지르지 않는다", o.width() <= 560)
 
+        o.set_hovered(False)
+        self.pump(60)
+        self.check("커서를 안 올리면 화살표가 없다", o._prev_rect.isEmpty())
+
         o.set_wander(True)
         o.set_hovered(True)
+        self.pump(60)
+        self.check("커서를 올리면 ‹ › 가 나타난다", not o._prev_rect.isEmpty())
+        self.check("화살표가 말풍선 양 끝에 붙는다",
+                   o._prev_rect.left() == o._bubble.left()
+                   and o._next_rect.right() == o._bubble.right())
+        self.check("호버 영역이 말풍선까지 덮는다",
+                   o.hover_rect().contains(o.mapToGlobal(o._bubble.center())))
         self.check("커서가 올라가면 걷기가 멈춘다", o.mascot.wandering is False)
         held = o.position[0]
         self.pump(1200)
@@ -254,6 +274,7 @@ class Verifier:
         print("[7] 렌더링")
         o = self.overlay
         o.set_word("ephemeral", "덧없는, 단명하는")
+        o.set_hovered(True)          # 화살표까지 보이는 상태로 남긴다
         o.set_meaning_visible(True)
         self.pump(400)
         if self.shot_path is None:
@@ -327,6 +348,8 @@ class Verifier:
                 # 있다. 여기서 보려는 것은 '커서를 올려 둔 동안 유지되는가' 뿐이다.
                 wa.tray.pause_toggled.emit(True)
                 self.pump(150)
+                wa.next_word()          # 되돌아갈 히스토리를 만들어 둔다
+                wa.next_word()
                 wa.overlay.set_word("ephemeral", "덧없는, 단명하는")
                 self.pump(200)
                 center = wa.overlay.mapToGlobal(wa.overlay._body.center())
@@ -336,6 +359,18 @@ class Verifier:
                            wa.overlay.hover_rect().contains(center))
                 self.check("올려 둔 동안 뜻이 계속 보인다",
                            wa.overlay.meaning_visible)
+
+                shown = wa.overlay._word
+                arrow = wa.overlay._prev_rect
+                self.check("말풍선에 화살표가 떠 있다", not arrow.isEmpty())
+                if not arrow.isEmpty():
+                    g = wa.overlay.mapToGlobal(arrow.center())
+                    realinput.click(g.x(), g.y(), self.app.processEvents)
+                    self.pump(300)
+                    self.check("‹ 를 누르면 이전 단어로 간다",
+                               wa.overlay._word != shown)
+                    self.check("화살표를 눌러도 캐릭터가 끌려가지 않는다",
+                               wa.overlay.mascot.action != "drag")
             finally:
                 realinput.restore_cursor(saved)
         finally:

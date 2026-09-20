@@ -96,6 +96,9 @@ def load_words(path) -> tuple[list[str], dict[str, str], str | None]:
     return words, meanings, None
 
 
+HISTORY_LIMIT = 200
+
+
 class WordSource:
     """셔플백 방식으로 단어를 돌려준다.
 
@@ -112,6 +115,9 @@ class WordSource:
         self._bag: list[str] = []
         self._i = 0
         self._prev: str | None = None
+        # 지나온 단어들. 되돌아가서 다시 볼 수 있어야 하므로 뽑은 순서를 남긴다.
+        self._history: list[str] = []
+        self._cursor = -1
         self._refill()
 
     @classmethod
@@ -141,6 +147,19 @@ class WordSource:
         """그 단어의 뜻. 없으면 None."""
         return self._meanings.get(word)
 
+    @property
+    def can_prev(self) -> bool:
+        return self._cursor > 0
+
+    @property
+    def can_next(self) -> bool:
+        """다음은 항상 있다 — 히스토리 끝이면 새로 뽑는다."""
+        return bool(self._words)
+
+    @property
+    def history(self) -> list[str]:
+        return list(self._history)
+
     # --- 순환 ---------------------------------------------------------
 
     def _refill(self) -> None:
@@ -157,9 +176,17 @@ class WordSource:
         self._i = 0
 
     def next(self) -> str:
-        """다음 단어. 단어가 하나도 없으면 안내 문구를 돌려준다."""
+        """다음 단어. 단어가 하나도 없으면 안내 문구를 돌려준다.
+
+        되돌아가 있는 상태라면 새로 뽑지 않고 히스토리를 따라 앞으로 간다.
+        그래야 이전/다음을 오갈 때 같은 자리를 왕복할 수 있다.
+        """
         if not self._words:
             return GUIDE_TEXT
+        if self._cursor + 1 < len(self._history):
+            self._cursor += 1
+            return self._history[self._cursor]
+
         if self._i >= len(self._bag):
             self._refill()
         # 끝에서 pop 하지 않고 앞에서부터 커서로 소비한다.
@@ -167,7 +194,30 @@ class WordSource:
         word = self._bag[self._i]
         self._i += 1
         self._prev = word
+        self._push(word)
         return word
+
+    def prev(self) -> str | None:
+        """한 칸 되돌아간다. 더 갈 데가 없으면 None (호출한 쪽이 아무것도 안 한다)."""
+        if not self.can_prev:
+            return None
+        self._cursor -= 1
+        return self._history[self._cursor]
+
+    def current(self) -> str | None:
+        if 0 <= self._cursor < len(self._history):
+            return self._history[self._cursor]
+        return None
+
+    def _push(self, word: str) -> None:
+        self._history.append(word)
+        if len(self._history) > HISTORY_LIMIT:
+            # 앞쪽을 버린다. 몇 시간 전 단어까지 거슬러 올라갈 일은 없고,
+            # 하루 종일 켜 두면 목록이 끝없이 자란다.
+            drop = len(self._history) - HISTORY_LIMIT
+            del self._history[:drop]
+            self._cursor -= drop
+        self._cursor = len(self._history) - 1
 
     # --- 다시 불러오기 -------------------------------------------------
 
@@ -186,5 +236,8 @@ class WordSource:
         self._meanings = meanings
         self._error = None
         self._prev = None
+        # 목록이 바뀌었으면 지나온 기록도 무의미하다 (지워진 단어로 되돌아갈 수 있다).
+        self._history.clear()
+        self._cursor = -1
         self._refill()
         return True

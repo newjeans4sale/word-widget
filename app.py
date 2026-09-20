@@ -56,6 +56,7 @@ class WidgetApp:
         self._paused = bool(self.cfg.paused)
         self._move_mode = False
         self._hidden_by_fullscreen = False
+        self._hovered = False
 
         self.word_timer = QTimer(qapp)
         self.word_timer.timeout.connect(self.next_word)
@@ -80,6 +81,7 @@ class WidgetApp:
         t.pause_toggled.connect(self._on_pause)
         t.move_mode_toggled.connect(self._on_move_mode)
         t.next_word.connect(self.next_word)
+        t.prev_word.connect(self.prev_word)
         t.reset_requested.connect(self._on_reset)
         t.reload_requested.connect(self._on_reload)
         t.open_words.connect(self._open_words)
@@ -123,6 +125,8 @@ class WidgetApp:
         if self.mascot_mode:
             o.moved.connect(self._on_mascot_moved)
             o.clicked.connect(self.next_word)
+            o.prev_requested.connect(self.prev_word)
+            o.next_requested.connect(self.next_word)
         else:
             o.moved.connect(self._on_moved)
             o.font_size_changed.connect(self._on_font_resized)
@@ -203,15 +207,31 @@ class WidgetApp:
         그래서 이동 중에는 회전을 멈춘다.
         """
         # 뜻을 읽는 중에 단어가 바뀌면 곤란하므로 호버 중에도 멈춘다.
-        if self._paused or self._move_mode or self.overlay.meaning_visible:
+        # 마스코트 모드에서는 뜻이 없는 단어에서도 멈춘다 — 화살표로 넘겨 보는
+        # 중에 5초마다 저절로 넘어가면 손에서 놓친다. 텍스트 모드는 구석에 있어
+        # 커서가 우연히 얹힐 수 있으므로 종전대로 뜻이 떠 있을 때만 멈춘다.
+        hover_hold = self.mascot_mode and self._hovered
+        if self._paused or self._move_mode or self.overlay.meaning_visible or hover_hold:
             self.word_timer.stop()
         else:
             self.word_timer.start(max(1, int(self.cfg.interval_sec * 1000)))
 
     def next_word(self) -> None:
         """일시정지 중이어도 한 번은 넘긴다 (트레이 '다음 단어')."""
-        word = self.source.next()
+        self._show_word(self.source.next())
+
+    def prev_word(self) -> None:
+        """지나온 단어로 되돌아간다. 더 갈 데가 없으면 아무 일도 하지 않는다."""
+        word = self.source.prev()
+        if word is not None:
+            self._show_word(word)
+
+    def _show_word(self, word: str) -> None:
         self.overlay.set_word(word, self.source.meaning(word))
+        if self.mascot_mode:
+            self.overlay.set_history_state(self.source.can_prev, self.source.can_next)
+        if self.tray.act_prev is not None:
+            self.tray.act_prev.setEnabled(self.source.can_prev)
 
     # --- 트레이 동작 ----------------------------------------------------
 
@@ -373,6 +393,9 @@ class WidgetApp:
             return
 
         inside = self.overlay.hover_rect().contains(QCursor.pos())
+        if inside != self._hovered:
+            self._hovered = inside
+            self._apply_timer()
         if self.mascot_mode:
             # 뜻이 없는 단어에서도 멈춘다. 가리키면 서는 편이 자연스럽고,
             # 뜻이 있는 단어로 바뀌는 순간 이미 서 있어야 읽을 수 있다.
@@ -393,6 +416,9 @@ class WidgetApp:
         self._hover_ticks = 0
         if self.mascot_mode:
             self.overlay.set_hovered(False)
+        if self._hovered:
+            self._hovered = False
+            self._apply_timer()
         if self.overlay.meaning_visible:
             self.overlay.set_meaning_visible(False)
             self._apply_timer()

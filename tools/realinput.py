@@ -84,6 +84,19 @@ def drag(start: tuple[int, int], end: tuple[int, int], pump, steps: int = 6) -> 
     pump()
 
 
+def click(x: int, y: int, pump) -> None:
+    """그 지점을 한 번 누른다. 드래그로 오인되지 않게 누르는 동안 움직이지 않는다."""
+    move(x, y)
+    time.sleep(0.12)
+    pump()
+    _send(MOUSEEVENTF_LEFTDOWN)
+    time.sleep(0.08)
+    pump()
+    _send(MOUSEEVENTF_LEFTUP)
+    time.sleep(0.12)
+    pump()
+
+
 def window_at(x: int, y: int) -> int:
     _u32.WindowFromPoint.argtypes = [wintypes.POINT]
     _u32.WindowFromPoint.restype = wintypes.HWND
