@@ -1,0 +1,14 @@
+{
+  "words_file": "words.txt",
+  "interval_sec": 5.0,
+  "font_size_pt": 14,
+  "font_family": "Segoe UI",
+  "color": "#FFFFFF",
+  "outline_color": "#000000",
+  "opacity": 0.85,
+  "anchor": "bottom-right",
+  "anchor_x": null,
+  "anchor_y": null,
+  "hide_on_fullscreen": true,
+  "paused": false
+}
