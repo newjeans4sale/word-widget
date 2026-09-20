@@ -1,266 +1,267 @@
-# 영단어 학습 목록. "word, definition" 형식이며 마우스를 올리면 설명이 보입니다.
-# 원본(직접 적으신 한글 노트)은 raw/list.txt 에 그대로 보관되어 있습니다.
-# 수정한 뒤 트레이 > 다시 불러오기 를 누르면 바로 반영됩니다.
-
-# ---- 직접 정리하신 목록 (181개) ----
-In response to, as a reaction or reply to
-Escalate, to increase rapidly in intensity or seriousness
-Be subject to, to be affected by or liable to undergo
-Be subjected to, to be made to undergo something unpleasant
-Carry out, to perform or complete a task
-Decisively, in a firm and conclusive manner
-Decisive, settling an issue; showing firm resolve
-Accuse, to charge someone with an offense or wrongdoing
-Impeachable, serious enough to warrant removal from office
-Impeachment, a formal charge of misconduct against an official
-Emasculate, to deprive of strength or effectiveness
-Facilitate, to make an action or process easier
-Pledge, a solemn promise or binding commitment
-Leverage, to use something to maximum advantage; influence
-Ramp up, to increase in volume, speed, or intensity
-Disclose, to make known; to reveal
-Play second fiddle, to take a less important role than someone else
-Volatile, liable to change suddenly; easily evaporating
-Feasible, capable of being done; plausible
-Debilitate, to weaken; to sap the strength of
-Inference, a conclusion drawn from evidence
-Infer, to conclude from evidence rather than explicit statement
-Assorted, consisting of various types mixed together
-Subpar, below an expected or average standard
-Transitive, of a verb, taking a direct object
-Intransitive, of a verb, taking no direct object
-Competent, having the skill to do something well
-Incompetent, lacking the skill to do something properly
-Incompetence, inability to do a job properly
-Condemn, to denounce strongly; to sentence to punishment
-Extradite, to hand a suspect over to another jurisdiction
-Halt, to bring or come to an abrupt stop
-Retroactively, with effect from a date in the past
-Evoke, to bring a feeling or memory to mind
-Apprehensive, anxious about what may happen
-Apprehend, to arrest; also to grasp or understand
-Brittle, hard but liable to break; lacking resilience
-Far-fetched, very unlikely to be true and hard to believe
-Despicable, deserving contempt; utterly mean
-Incongruent, not matching or fitting together
-Apprehension, anxiety about the future; also an arrest
-Gruesome, causing horror or disgust
-Meddlesome, inclined to interfere in other people's affairs
-Indict, to formally charge with a crime
-Acquaintance, a person one knows slightly
-Incite, to stir up or provoke to action
-Induce, to bring about; to persuade
-Lure, to tempt or entice, often into danger
-Pretense, a false show intended to deceive
-Allege, to assert without proof
-Alleged, claimed but not yet proven
-Allegation, an unproven claim of wrongdoing
-On behalf of, as the representative of
-In behalf of, for the benefit of
-Implicate, to show that someone is involved in wrongdoing
-Confide, to tell someone a secret in trust
-Elicit, to draw out a response or reaction
-Exacerbate, to make a bad situation worse
-Suffice, to be enough for a purpose
-Predicament, a difficult situation with no easy way out
-Admissible, acceptable or valid, especially as evidence
-Overt, done openly, not concealed; opposite of covert
-Account, a report or description of events
-On account of, because of
-Take account of, to consider something when judging
-Discern, to perceive or recognize what is not obvious
-Take sth into account, to weigh a factor when judging a situation
-Neglectful, failing to give proper care or attention
-Elude, to escape or avoid, especially by cunning
-Elusive, hard to find, catch, or define
-Retain, to keep possession of
-Salient, most noticeable or important
-Retract, to withdraw a statement; to draw back in
-Abbreviate, to shorten a word or piece of text
-Literal, taking words in their basic sense; exact
-Arbitrary, based on whim rather than reason; despotic
-Aggregate, a total formed by combining separate parts
-Excruciate, to inflict intense pain; excruciating means extremely painful
-Affectation, behavior put on to impress others
-Explicit, stated clearly and in full detail
-Irritate, to annoy; to make sore or inflamed
-Proclaim, to announce officially and publicly
-Dogged, persistent; refusing to give up
-Exigent, urgent and pressing; making heavy demands
-Perplex, to confuse or puzzle
-Premise, a statement taken as the basis of an argument
-Content to, willing to do something without complaint
-Dissect, to cut apart for study; to analyze minutely
-Valiant, showing courage and determination
-Satiate, to satisfy fully, often to excess
-Satiable, able to be satisfied
-Insatiable, impossible to satisfy
-Condone, to accept or overlook wrongdoing
-Deprave, to corrupt morally
-Amend, to change or revise for the better
-Be Content with, to be satisfied with what one has
-Sedate, calm, dignified, and unhurried
-Acquire, to come to possess; to obtain or attain
-Endow, to give a large gift; to furnish with a quality
-Espionage, the practice of spying
-Adversary, an opponent or enemy
-Render, to cause to become; to give or provide
-Cascade, to fall or flow in stages like a waterfall
-Refrain, to hold back from doing; also a repeated chorus
-Confidential, meant to be kept secret; entrusted with secrets
-Avert, to turn away; to prevent from happening
-Perverse, deliberately contrary or unreasonable
-Rebuke, to criticize sharply
-Predicate, to assert as true; also to base one thing on another
-Disingenuous, pretending sincerity; not candid
-Ingenuous, innocent and unsuspecting
-Futile, pointless; incapable of producing a result
-Exhaustive, thorough and complete, leaving nothing out
-Citation, a quotation or a reference to a source
-Pivotal, of crucial importance
-Pivot, a central point; to turn on that point
-Procrastinate, to put off doing something
-Procrastination, the act of needlessly delaying
-Contrived, deliberately created and so seeming unnatural
-Permutable, able to be rearranged or interchanged
-Permute, to rearrange into a different order
-Divisible, able to be divided, especially without remainder
-Captivate, to attract and hold the attention of
-Banish, to send away permanently; to expel
-Languish, to lose vigor; to be left in a bad situation
-Abide by, to comply with a rule or decision
-Abide, to tolerate; to endure
-Provision, the act of supplying; a condition in an agreement
-Provisional, arranged for the present and likely to change
-Predispose, to make liable or inclined beforehand
-Dispose, to arrange; to make someone inclined toward
-Disposition, a person's inherent qualities; also an arrangement
-Infringe, to violate a law or a right
-Cutting edge, the most advanced stage of development
-Convulse, to shake violently with involuntary movement
-Relinquish, to give up or surrender
-Disparage, to belittle; to speak of slightingly
-Extort, to obtain by force or threats
-Disconcert, to unsettle or disturb someone's composure
-Pry, to inquire too closely into private matters
-Recompose, to form anew; to calm oneself again
-Composing, calming; restoring composure
-Litigate, to take a dispute to court
-Agonize, to struggle painfully over a decision
-Putrid, rotting and foul-smelling
-Embark on, to begin a new project or journey
-Exalt, to raise in rank; to praise highly
-Synthetic, made by chemical synthesis; artificial
-Reputable, having a good reputation
-Commensurate, corresponding in size or degree; proportionate
-Commensurable, measurable by a common standard
-Conduce, to lead or contribute to a result
-Perturb, to make anxious or unsettled
-Viscous, thick and sticky; slow-flowing
-Delegate, a representative; to entrust a task to another
-Console, to comfort someone in distress
-Presumptuous, overstepping proper bounds; too bold
-Construe, to interpret in a particular way
-Revoke, to cancel or annul officially
-Strive for/to, to make great efforts to achieve something
-Venerate, to regard with deep respect
-Commotion, noisy confusion or disturbance
-Germane, relevant and appropriate to the matter at hand
-Evince, to reveal clearly; to make evident
-Come into ~'s own, to gain the recognition one's qualities deserve
-Desiccation, the removal of moisture; drying out
-Concoction, a mixture of ingredients; also a made-up story
-Fermentation, the breakdown of a substance by microbes
-Interspersed, scattered here and there among other things
-In unison, all together at the same time; in agreement
-Convulsive, marked by sudden violent movement
-Deride, to mock with contempt
-Juxtaposition, the placing of things side by side for contrast
-Inarticulate, unable to express oneself clearly
-Pertain, to be relevant or applicable to
-Transcend, to go beyond the limits of
-Solicit, to ask for earnestly; to seek to obtain
-Concatenate, to link together in a chain or series
-Desecrate, to treat a sacred place with violent disrespect
-Perseverance, steady persistence in spite of difficulty
-Succumb, to yield to a force or pressure
-
-# ---- 기본 제공 목록 (78개, 겹치는 5개 제외) ----
-Abate, to lessen or die down
-Aberration, a departure from what is normal
-Abhor, to detest utterly
-Acquiesce, to accept reluctantly without protest
-Alacrity, brisk and cheerful readiness
-Amiable, friendly and good-natured
-Appease, to pacify by giving in to demands
-Arcane, understood by only a few; obscure
-Avarice, extreme greed for wealth
-Brazen, boldly shameless
-Brusque, abrupt to the point of rudeness
-Cajole, to coax with flattery
-Callous, unfeeling toward others' suffering
-Candor, frankness; honest expression
-Chicanery, trickery used to deceive
-Circumspect, cautious; weighing every risk
-Clandestine, kept secret, usually because improper
-Coerce, to compel by force or threat
-Cogent, clear and convincing
-Complacent, smugly satisfied and unalert
-Confidant, a person entrusted with secrets
-Connive, to secretly conspire or allow wrongdoing
-Cumulative, growing by steady accumulation
-Debase, to lower in quality or worth
-Decorum, proper and dignified conduct
-Deference, respectful yielding to another
-Demure, reserved and modest
-Despot, a ruler with absolute power
-Diligent, steady and careful in effort
-Elated, filled with high spirits
-Eloquent, fluent and persuasive in speech
-Embezzle, to steal funds entrusted to you
-Empathy, the sharing of another's feelings
-Emulate, to imitate in order to match or surpass
-Enervating, draining of energy and vitality
-Ephemeral, lasting a very short time
-Equanimity, calmness under strain
-Espouse, to adopt and support a cause
-Exculpate, to clear of blame
-Expedient, useful for the moment, if not principled
-Fastidious, very attentive to detail; hard to please
-Fortuitous, happening by lucky chance
-Fractious, irritable and hard to control
-Garrulous, excessively talkative
-Hackneyed, overused and stale
-Iconoclast, one who attacks cherished beliefs
-Impetuous, acting rashly on impulse
-Inchoate, just begun; not yet fully formed
-Indolent, habitually lazy
-Ineffable, too great to be put into words
-Intrepid, fearless in the face of danger
-Laconic, using very few words
-Maelstrom, a violent whirlpool; turbulent confusion
-Munificent, extremely generous in giving
-Nefarious, wicked and criminal
-Obdurate, stubbornly refusing to change
-Obsequious, fawning and servile
-Ostentatious, showy; meant to impress
-Paragon, a model of excellence
-Penchant, a strong liking or habit
-Perfidious, treacherous; breaking faith
-Perfunctory, done without care or interest
-Pragmatic, guided by practical results
-Prevaricate, to speak evasively to avoid the truth
-Quixotic, idealistic to the point of folly
-Recalcitrant, stubbornly defiant of authority
-Reticent, reluctant to speak or reveal
-Sagacious, showing keen and sound judgment
-Sanguine, cheerfully optimistic
-Soporific, tending to induce sleep
-Spurious, false though seeming genuine
-Staid, sedate and unadventurous
-Taciturn, habitually silent and withdrawn
-Tenacious, holding firmly; persistent
-Trenchant, sharply incisive
-Ubiquitous, present everywhere at once
-Vociferous, loud and insistent in expression
-Zealot, an uncompromising partisan
+# 영단어 학습 목록. "word, definition" 형식이며 마우스를 올리면 설명이 보입니다.
+# 원본(직접 적으신 한글 노트)은 raw/list.txt 에 그대로 보관되어 있습니다.
+# 수정한 뒤 트레이 > 다시 불러오기 를 누르면 바로 반영됩니다.
+
+# ---- 직접 정리하신 목록 (181개) ----
+In response to, as a reaction or reply to
+Escalate, to increase rapidly in intensity or seriousness
+Be subject to, to be affected by or liable to undergo
+Be subjected to, to be made to undergo something unpleasant
+Carry out, to perform or complete a task
+Decisively, in a firm and conclusive manner
+Decisive, settling an issue; showing firm resolve
+Accuse, to charge someone with an offense or wrongdoing
+Impeachable, serious enough to warrant removal from office
+Impeachment, a formal charge of misconduct against an official
+Emasculate, to deprive of strength or effectiveness
+Facilitate, to make an action or process easier
+Pledge, a solemn promise or binding commitment
+Leverage, to use something to maximum advantage; influence
+Ramp up, to increase in volume, speed, or intensity
+Disclose, to make known; to reveal
+Play second fiddle, to take a less important role than someone else
+Volatile, liable to change suddenly; easily evaporating
+Feasible, capable of being done; plausible
+Debilitate, to weaken; to sap the strength of
+Inference, a conclusion drawn from evidence
+Infer, to conclude from evidence rather than explicit statement
+Assorted, consisting of various types mixed together
+Subpar, below an expected or average standard
+Transitive, of a verb, taking a direct object
+Intransitive, of a verb, taking no direct object
+Competent, having the skill to do something well
+Incompetent, lacking the skill to do something properly
+Incompetence, inability to do a job properly
+Condemn, to denounce strongly; to sentence to punishment
+Extradite, to hand a suspect over to another jurisdiction
+Halt, to bring or come to an abrupt stop
+Retroactively, with effect from a date in the past
+Evoke, to bring a feeling or memory to mind
+Apprehensive, anxious about what may happen
+Apprehend, to arrest; also to grasp or understand
+Brittle, hard but liable to break; lacking resilience
+Far-fetched, very unlikely to be true and hard to believe
+Despicable, deserving contempt; utterly mean
+Incongruent, not matching or fitting together
+Apprehension, anxiety about the future; also an arrest
+Gruesome, causing horror or disgust
+Meddlesome, inclined to interfere in other people's affairs
+Indict, to formally charge with a crime
+Acquaintance, a person one knows slightly
+Incite, to stir up or provoke to action
+Induce, to bring about; to persuade
+Lure, to tempt or entice, often into danger
+Pretense, a false show intended to deceive
+Allege, to assert without proof
+Alleged, claimed but not yet proven
+Allegation, an unproven claim of wrongdoing
+On behalf of, as the representative of
+In behalf of, for the benefit of
+Implicate, to show that someone is involved in wrongdoing
+Confide, to tell someone a secret in trust
+Elicit, to draw out a response or reaction
+Exacerbate, to make a bad situation worse
+Suffice, to be enough for a purpose
+Predicament, a difficult situation with no easy way out
+Admissible, acceptable or valid, especially as evidence
+Overt, done openly, not concealed; opposite of covert
+Account, a report or description of events
+On account of, because of
+Take account of, to consider something when judging
+Discern, to perceive or recognize what is not obvious
+Take sth into account, to weigh a factor when judging a situation
+Neglectful, failing to give proper care or attention
+Elude, to escape or avoid, especially by cunning
+Elusive, hard to find, catch, or define
+Retain, to keep possession of
+Salient, most noticeable or important
+Retract, to withdraw a statement; to draw back in
+Abbreviate, to shorten a word or piece of text
+Literal, taking words in their basic sense; exact
+Arbitrary, based on whim rather than reason; despotic
+Aggregate, a total formed by combining separate parts
+Excruciate, to inflict intense pain; excruciating means extremely painful
+Affectation, behavior put on to impress others
+Explicit, stated clearly and in full detail
+Irritate, to annoy; to make sore or inflamed
+Proclaim, to announce officially and publicly
+Dogged, persistent; refusing to give up
+Exigent, urgent and pressing; making heavy demands
+Perplex, to confuse or puzzle
+Premise, a statement taken as the basis of an argument
+Content to, willing to do something without complaint
+Dissect, to cut apart for study; to analyze minutely
+Valiant, showing courage and determination
+Satiate, to satisfy fully, often to excess
+Satiable, able to be satisfied
+Insatiable, impossible to satisfy
+Condone, to accept or overlook wrongdoing
+Deprave, to corrupt morally
+Amend, to change or revise for the better
+Be Content with, to be satisfied with what one has
+Sedate, calm, dignified, and unhurried
+Acquire, to come to possess; to obtain or attain
+Endow, to give a large gift; to furnish with a quality
+Espionage, the practice of spying
+Adversary, an opponent or enemy
+Render, to cause to become; to give or provide
+Cascade, to fall or flow in stages like a waterfall
+Refrain, to hold back from doing; also a repeated chorus
+Confidential, meant to be kept secret; entrusted with secrets
+Avert, to turn away; to prevent from happening
+Perverse, deliberately contrary or unreasonable
+Rebuke, to criticize sharply
+Predicate, to assert as true; also to base one thing on another
+Disingenuous, pretending sincerity; not candid
+Ingenuous, innocent and unsuspecting
+Futile, pointless; incapable of producing a result
+Exhaustive, thorough and complete, leaving nothing out
+Citation, a quotation or a reference to a source
+Pivotal, of crucial importance
+Pivot, a central point; to turn on that point
+Procrastinate, to put off doing something
+Procrastination, the act of needlessly delaying
+Contrived, deliberately created and so seeming unnatural
+Permutable, able to be rearranged or interchanged
+Permute, to rearrange into a different order
+Divisible, able to be divided, especially without remainder
+Captivate, to attract and hold the attention of
+Banish, to send away permanently; to expel
+Languish, to lose vigor; to be left in a bad situation
+Abide by, to comply with a rule or decision
+Abide, to tolerate; to endure
+Provision, the act of supplying; a condition in an agreement
+Provisional, arranged for the present and likely to change
+Predispose, to make liable or inclined beforehand
+Dispose, to arrange; to make someone inclined toward
+Disposition, a person's inherent qualities; also an arrangement
+Infringe, to violate a law or a right
+Cutting edge, the most advanced stage of development
+Convulse, to shake violently with involuntary movement
+Relinquish, to give up or surrender
+Disparage, to belittle; to speak of slightingly
+Extort, to obtain by force or threats
+Disconcert, to unsettle or disturb someone's composure
+Pry, to inquire too closely into private matters
+Recompose, to form anew; to calm oneself again
+Composing, calming; restoring composure
+Litigate, to take a dispute to court
+Agonize, to struggle painfully over a decision
+Putrid, rotting and foul-smelling
+Embark on, to begin a new project or journey
+Exalt, to raise in rank; to praise highly
+Synthetic, made by chemical synthesis; artificial
+Reputable, having a good reputation
+Commensurate, corresponding in size or degree; proportionate
+Commensurable, measurable by a common standard
+Conduce, to lead or contribute to a result
+Perturb, to make anxious or unsettled
+Viscous, thick and sticky; slow-flowing
+Delegate, a representative; to entrust a task to another
+Console, to comfort someone in distress
+Presumptuous, overstepping proper bounds; too bold
+Construe, to interpret in a particular way
+Revoke, to cancel or annul officially
+Strive for/to, to make great efforts to achieve something
+Venerate, to regard with deep respect
+Commotion, noisy confusion or disturbance
+Germane, relevant and appropriate to the matter at hand
+Evince, to reveal clearly; to make evident
+Come into ~'s own, to gain the recognition one's qualities deserve
+Desiccation, the removal of moisture; drying out
+Concoction, a mixture of ingredients; also a made-up story
+Fermentation, the breakdown of a substance by microbes
+Interspersed, scattered here and there among other things
+In unison, all together at the same time; in agreement
+Convulsive, marked by sudden violent movement
+Deride, to mock with contempt
+Juxtaposition, the placing of things side by side for contrast
+Inarticulate, unable to express oneself clearly
+Pertain, to be relevant or applicable to
+Transcend, to go beyond the limits of
+Solicit, to ask for earnestly; to seek to obtain
+Concatenate, to link together in a chain or series
+Desecrate, to treat a sacred place with violent disrespect
+Perseverance, steady persistence in spite of difficulty
+Succumb, to yield to a force or pressure
+
+# ---- 기본 제공 목록 (78개, 겹치는 5개 제외) ----
+Abate, to lessen or die down
+Aberration, a departure from what is normal
+Abhor, to detest utterly
+Acquiesce, to accept reluctantly without protest
+Alacrity, brisk and cheerful readiness
+Amiable, friendly and good-natured
+Appease, to pacify by giving in to demands
+Arcane, understood by only a few; obscure
+Avarice, extreme greed for wealth
+Brazen, boldly shameless
+Brusque, abrupt to the point of rudeness
+Cajole, to coax with flattery
+Callous, unfeeling toward others' suffering
+Candor, frankness; honest expression
+Chicanery, trickery used to deceive
+Circumspect, cautious; weighing every risk
+Clandestine, kept secret, usually because improper
+Coerce, to compel by force or threat
+Cogent, clear and convincing
+Complacent, smugly satisfied and unalert
+Confidant, a person entrusted with secrets
+Connive, to secretly conspire or allow wrongdoing
+Cumulative, growing by steady accumulation
+Debase, to lower in quality or worth
+Decorum, proper and dignified conduct
+Deference, respectful yielding to another
+Demure, reserved and modest
+Despot, a ruler with absolute power
+Diligent, steady and careful in effort
+Elated, filled with high spirits
+Eloquent, fluent and persuasive in speech
+Embezzle, to steal funds entrusted to you
+Empathy, the sharing of another's feelings
+Emulate, to imitate in order to match or surpass
+Enervating, draining of energy and vitality
+Ephemeral, lasting a very short time
+Equanimity, calmness under strain
+Espouse, to adopt and support a cause
+Exculpate, to clear of blame
+Expedient, useful for the moment, if not principled
+Fastidious, very attentive to detail; hard to please
+Fortuitous, happening by lucky chance
+Fractious, irritable and hard to control
+Garrulous, excessively talkative
+Hackneyed, overused and stale
+Iconoclast, one who attacks cherished beliefs
+Impetuous, acting rashly on impulse
+Inchoate, just begun; not yet fully formed
+Indolent, habitually lazy
+Ineffable, too great to be put into words
+Intrepid, fearless in the face of danger
+Laconic, using very few words
+Maelstrom, a violent whirlpool; turbulent confusion
+Munificent, extremely generous in giving
+Nefarious, wicked and criminal
+Nonchalant, casually unconcerned; coolly indifferent
+Obdurate, stubbornly refusing to change
+Obsequious, fawning and servile
+Ostentatious, showy; meant to impress
+Paragon, a model of excellence
+Penchant, a strong liking or habit
+Perfidious, treacherous; breaking faith
+Perfunctory, done without care or interest
+Pragmatic, guided by practical results
+Prevaricate, to speak evasively to avoid the truth
+Quixotic, idealistic to the point of folly
+Recalcitrant, stubbornly defiant of authority
+Reticent, reluctant to speak or reveal
+Sagacious, showing keen and sound judgment
+Sanguine, cheerfully optimistic
+Soporific, tending to induce sleep
+Spurious, false though seeming genuine
+Staid, sedate and unadventurous
+Taciturn, habitually silent and withdrawn
+Tenacious, holding firmly; persistent
+Trenchant, sharply incisive
+Ubiquitous, present everywhere at once
+Vociferous, loud and insistent in expression
+Zealot, an uncompromising partisan
