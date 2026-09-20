@@ -97,9 +97,21 @@ sprites/
     sit_0.png   sleep_0.png
 ```
 
-쓰는 동작은 `idle` `walk` `sit` `sleep` `fall` `drag` 여섯입니다. 없는 동작은
-`sleep→sit→idle` 처럼 알아서 대신합니다. 프레임이 하나뿐이면 `sit.png` 로 번호를
-빼도 됩니다.
+쓰는 동작은 열 가지입니다.
+
+| 동작 | 언제 |
+|---|---|
+| `idle` | **필수.** 서 있기 |
+| `walk` / `run` | 걷기 / 뛰기 (뛰기는 2.6배 빠릅니다) |
+| `sit` / `lie` / `sleep` | 앉기 / 엎드리기 / 자기 |
+| `beg` / `bark` | 가끔 한 번씩 하는 짓 |
+| `fall` | 놓아서 떨어지는 중 |
+| `drag` | 잡혀 있는 중 |
+
+없는 동작은 `sleep→lie→sit→idle`, `run→walk→idle` 처럼 알아서 대신합니다.
+**그림이 없는 동작은 상태기계가 아예 고르지 않습니다** — 폴백으로 서 있는 그림이
+나오면 몇 초 동안 아무 일도 안 일어나는 것처럼 보이기 때문입니다.
+프레임이 하나뿐이면 `sit.png` 로 번호를 빼도 됩니다.
 
 `meta.json` 은 전부 선택값입니다.
 
@@ -127,9 +139,34 @@ sprites/
 걸을 때 발이 위아래로 떱니다. 그림이 여러 파일에 나뉘어 있으면 두 번째부터
 `--append` 를 붙여 같은 폴더에 이어 넣습니다.
 
-기본 캐릭터는 `tools/fetch_sprites.py` 를 한 번 돌리면 만들어집니다.
+### Shimeji 팩 가져오기
+
+인터넷에 도는 Shimeji 캐릭터 팩(`shime1.png` ~ `shime46.png`)을 그대로 넣을 수 있습니다.
+
+```
+.venv\Scripts\python.exe tools\import_shimeji.py 받은폴더_또는_zip --out sprites/miku
+```
+
+번호와 동작의 대응은 shimeji-ee 의 기본 `conf/actions.xml` 을 따릅니다. 팩에 없는
+프레임이 있으면 그 동작만 건너뜁니다. Shimeji 의 `Pinched`(머리를 집혀 대롱거리는
+모습)가 우리 `drag` 에 그대로 들어맞아서, 잡아 끌면 실제로 대롱거립니다.
+
+그림이 왼쪽을 보고 있지 않으면 `--facing right`, 너무 크거나 작으면 `--scale 0.8`
+같은 식으로 조절합니다.
+
+> 대부분의 Shimeji 팩은 기존 애니/게임 캐릭터를 그린 것입니다. 개인 사용 범위를
+> 넘기지 않는 편이 안전합니다.
+
+### 기본으로 들어 있는 캐릭터
+
+`tools/fetch_sprites.py` 를 한 번 돌리면 만들어집니다.
 
 - `husky` — [rmazanek, OpenGameArt](https://opengameart.org/content/dog-3), CC0. 바로 내려받습니다.
+- `cat` — [Elthen](https://elthen.itch.io/2d-pixel-art-cat-sprites). itch.io 라 `Cat Sprite Sheet.png`
+  를 직접 받아 `raw/inbox/` 에 두면 잘라 넣습니다. 0원 가능·상업적 사용 허용이고
+  작가가 후원을 반깁니다.
+- `kuro` — 원조 Shimeji 마스코트. New BSD 라 마음대로 쓸 수 있고, Shimeji 변환기가
+  실제로 도는지 보여주는 본보기입니다. GitHub 에서 바로 내려받습니다.
 - 강아지 24마리 — [Pixel Dogs by Benvictus](https://benvictus.itch.io/pixel-dogs).
   털색으로 이름이 붙어 있습니다: `tan` `taupe` `slate` `blue` `rust` `white`
   `chocolate` `golden`, 흰 바탕에 얼룩이 있는 `patch-brown` `patch-grey`

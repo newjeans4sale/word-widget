@@ -362,6 +362,9 @@ class Verifier:
             try:
                 # 회전을 멈추지 않으면 5초마다 단어가 바뀌면서 뜻 없는 단어가 걸릴 수
                 # 있다. 여기서 보려는 것은 '커서를 올려 둔 동안 유지되는가' 뿐이다.
+                # 커서를 옮기는 사이에 걷거나 뛰어서 지나가 버리면 조준이 빗나간다.
+                # 여기서 보려는 것은 '올려 둔 뒤에 유지되는가' 이므로 세워 놓고 잰다.
+                wa.tray.wander_toggled.emit(False)
                 wa.tray.pause_toggled.emit(True)
                 self.pump(150)
                 wa.next_word()          # 되돌아갈 히스토리를 만들어 둔다
