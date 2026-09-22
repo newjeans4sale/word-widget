@@ -12,10 +12,10 @@
   "hide_on_fullscreen": true,
   "paused": false,
   "mode": "mascot",
-  "character": "charlie",
+  "character": "eevee",
   "mascot_scale": 1.0,
   "mascot_wander": true,
   "bubble": true,
-  "mascot_x": 547,
+  "mascot_x": 857,
   "mascot_y": 1040
 }
