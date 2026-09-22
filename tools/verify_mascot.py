@@ -155,17 +155,24 @@ class Verifier:
             # 합성 입력은 가끔 버튼 누름을 흘린다(그러면 캐릭터가 꿈쩍도 안 한다).
             # 사람이 끄는 것과 달리 한 번에 끝나므로, 안 잡혔으면 한 번 더 해 본다.
             moved = 0
-            for attempt in range(2):
+            for attempt in range(3):
                 before = o.position
                 center = o.mapToGlobal(o._body.center())
                 target = (center.x() - 220, center.y() - 160)
-                realinput.drag((center.x(), center.y()), target,
-                               self.app.processEvents)
+                # 눌림이 들어갔는지(grab) 와 따라왔는지(이동) 를 구분해서 본다.
+                grabbed = []
+                orig = o.mousePressEvent
+                o.mousePressEvent = lambda e: (grabbed.append(1), orig(e))[-1]
+                try:
+                    realinput.drag((center.x(), center.y()), target,
+                                   self.app.processEvents)
+                finally:
+                    o.mousePressEvent = orig
                 self.pump(120)
                 after = o.position
                 moved = abs(after[0] - before[0])
                 print(f"        {attempt + 1}차: 발밑 {before} -> {after} "
-                      f"(동작 {self.mascot_action(o)}, {moved}px)")
+                      f"({moved}px, 눌림 {'O' if grabbed else 'X'})")
                 if moved > 100:
                     break
                 self.pump(1200)     # 착지시키고 다시
