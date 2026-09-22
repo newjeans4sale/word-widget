@@ -12,10 +12,8 @@
   "hide_on_fullscreen": true,
   "paused": false,
   "mode": "mascot",
-  "character": "husky",
+  "character": "miku",
   "mascot_scale": 1.0,
   "mascot_wander": true,
-  "bubble": true,
-  "mascot_x": -630,
-  "mascot_y": 66
+  "bubble": true
 }

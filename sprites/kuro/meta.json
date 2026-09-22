@@ -1,6 +1,6 @@
 {
   "fps": 6.0,
-  "scale": 0.8,
+  "scale": 1.02,
   "facing": "left",
   "actions": {
     "walk": {

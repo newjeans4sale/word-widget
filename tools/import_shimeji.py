@@ -9,9 +9,18 @@ Shimeji 는 `shime1.png` ~ `shime46.png` 라는 오래된 규격을 쓴다. 번�
 우리 상태기계에 없는 것(벽 타기, 천장 매달리기, 분열)은 버린다. 반대로
 `drag` 는 Shimeji 의 Pinched(머리를 집힌 모습)가 그대로 들어맞는다.
 
-**정렬:** Shimeji 프레임은 전부 같은 크기의 캔버스에 맞춰 그려져 있다. 그래서
-여백을 동작마다 따로 자르면 안 되고 **모든 프레임의 합집합**으로 한 번에 잘라야
-발 위치가 유지된다 (import_sheet.py 의 --trim 과 반대다).
+**정렬:** 여백은 **동작마다** 딱 맞게 잘라낸다 (import_sheet.py 와 같다).
+
+처음에는 모든 프레임을 같은 상자로 잘랐다. 원본 캔버스가 같으니 그게 맞을 줄
+알았는데, 팬메이드 팩은 프레임마다 캔버스 안의 위치가 제각각이었다. gojo 는
+앉은 그림이 선 그림보다 26px 아래에, toothless 는 떨어지는 그림이 23px 아래에
+그려져 있었고, 공통 상자로 자르니 **서 있는 캐릭터가 바닥에서 그만큼 떠 버렸다**.
+게다가 넓게 뻗는 자세 하나 때문에 캔버스가 통째로 넓어져(피카츄 277px), 몸통
+양옆에 붙는 화살표가 허공에 떴다.
+
+동작마다 자르면 그 자세의 가장 낮은 픽셀이 바닥에 놓인다. 서면 발이, 앉으면
+엉덩이가 바닥에 닿는다 — 어느 쪽이든 그게 옳다. 공중에 있는 자세(떨어지는 중,
+집혀 대롱거리는 중)는 어차피 물리가 높이를 정하므로 상관없다.
 """
 from __future__ import annotations
 
@@ -79,7 +88,10 @@ def main(argv=None) -> int:
     ap.add_argument("--out", type=Path, required=True)
     # Shimeji 원본 그림은 왼쪽을 보고 있고 엔진이 뒤집어 쓴다.
     ap.add_argument("--facing", choices=("left", "right"), default="left")
-    ap.add_argument("--scale", type=float, default=1.0)
+    ap.add_argument("--scale", type=float, default=None,
+                    help="배율을 직접 지정 (기본은 --fit 으로 자동 계산)")
+    ap.add_argument("--fit", type=float, default=130.0,
+                    help="서 있는 모습의 긴 변을 이 픽셀에 맞춘다")
     ap.add_argument("--fps", type=float, default=6.0)
     args = ap.parse_args(argv)
 
@@ -122,35 +134,48 @@ def main(argv=None) -> int:
                   for n, p in frames.items()}
         used = {n for nums in chosen.values() for n in nums}
 
-        # 모든 프레임을 같은 상자로 자른다. 동작마다 따로 자르면 발이 떠다닌다.
-        box = None
-        for n in sorted(used):
-            rect = content_rect(images[n])
-            if rect is None:
-                continue
-            box = rect if box is None else box.united(rect)
+        rects = {n: content_rect(images[n]) for n in sorted(used)}
+        rects = {n: r for n, r in rects.items() if r is not None}
+        if not rects:
+            print("전부 투명한 프레임뿐입니다", file=sys.stderr)
+            return 1
 
         args.out.mkdir(parents=True, exist_ok=True)
         for stale in args.out.glob("*.png"):
             stale.unlink()
 
+        sizes = {}
         for action, nums in sorted(chosen.items()):
+            xs = [rects[n] for n in nums if n in rects]
+            if not xs:
+                continue
+            # 한 동작 안에서는 공통 상자를 쓴다. 프레임마다 따로 자르면 걸을 때 떤다.
+            left = min(r.left() for r in xs)
+            right = max(r.right() for r in xs)
+            top = min(r.top() for r in xs)
+            bottom = max(r.bottom() for r in xs)
             for i, n in enumerate(nums):
-                img = images[n]
-                if box is not None:
-                    img = img.copy(box)
-                img.save(str(args.out / f"{action}_{i}.png"))
+                crop = images[n].copy(left, top, right - left + 1, bottom - top + 1)
+                crop.save(str(args.out / f"{action}_{i}.png"))
+            sizes[action] = (right - left + 1, bottom - top + 1)
 
-        meta = {"fps": args.fps, "scale": args.scale, "facing": args.facing,
+        scale = args.scale
+        if scale is None:
+            # 서 있는 모습의 긴 변을 기준으로 잡는다. 캔버스가 아니라 실제 그림 크기다.
+            idle = rects[chosen["idle"][0]]
+            scale = round(args.fit / max(idle.width(), idle.height()), 2)
+
+        meta = {"fps": args.fps, "scale": scale, "facing": args.facing,
                 "actions": {"walk": {"fps": 8}, "run": {"fps": 12}}}
         (args.out / "meta.json").write_text(
             json.dumps(meta, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
         (args.out / "CREDITS.txt").write_text(CREDITS_NOTE + "\n", encoding="utf-8")
 
-        size = f"{box.width()}x{box.height()}" if box else "?"
-        print(f"{args.out}: {len(chosen)}개 동작, 한 칸 {size}")
+        print(f"{args.out}: {len(chosen)}개 동작, 배율 {scale}")
         for action, nums in sorted(chosen.items()):
-            print(f"  {action:5s} {len(nums)}프레임")
+            w, h = sizes.get(action, (0, 0))
+            print(f"  {action:5s} {len(nums)}프레임 {w}x{h}"
+                  f" -> {round(w * scale)}x{round(h * scale)}")
         if skipped:
             print("  (프레임이 없어 건너뜀: " + ", ".join(skipped) + ")")
         return 0
