@@ -10,8 +10,15 @@ raw/sprites/
 # 팬메이드 Shimeji 캐릭터. 남이 그린 남의 캐릭터라 저장소에 담지 않는다.
 # tools/import_shimeji.py 로 언제든 다시 만들 수 있다.
 /raw/shimeji/
-/sprites/miku/
+/sprites/charlie/
+/sprites/chiikawa/
+/sprites/cinnamoroll/
+/sprites/ditto/
+/sprites/eevee/
+/sprites/kirby/
+/sprites/penguin/
 /sprites/pikachu/
+/sprites/psyduck/
 /sprites/pusheen/
 /sprites/toothless/
-/sprites/gojo/
+/sprites/umbreon/

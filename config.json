@@ -12,8 +12,10 @@
   "hide_on_fullscreen": true,
   "paused": false,
   "mode": "mascot",
-  "character": "miku",
+  "character": "cat",
   "mascot_scale": 1.0,
   "mascot_wander": true,
-  "bubble": true
+  "bubble": true,
+  "mascot_x": 699,
+  "mascot_y": 927
 }
