@@ -100,10 +100,18 @@ class CharacterSpec:
         return action in self.actions
 
     def use_smooth(self, total_scale: float) -> bool:
-        """축소할 때만 부드럽게. 도트를 확대할 때 매끄럽게 하면 뭉개진다."""
+        """**정수배 확대일 때만** nearest. 나머지는 전부 부드럽게.
+
+        도트를 2배로 키울 때 매끄럽게 하면 뭉개지므로 nearest 가 맞다. 그런데
+        1.3배처럼 어중간한 배수를 nearest 로 키우면 어떤 픽셀은 한 칸, 어떤
+        픽셀은 두 칸이 되어 들쭉날쭉해진다. 도트가 아닌 그림(Shimeji 팩 같은)은
+        더 심하다. 정수배가 아니면 부드럽게 하는 편이 언제나 낫다.
+        """
         if self.smooth is not None:
             return self.smooth
-        return total_scale < 1.0
+        if total_scale >= 1.0 and abs(total_scale - round(total_scale)) < 1e-6:
+            return False
+        return True
 
 
 # --- 순수 층: 폴더 읽기 --------------------------------------------------

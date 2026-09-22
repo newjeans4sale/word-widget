@@ -183,3 +183,13 @@ def test_pick_character_with_nothing_available(tmp_path):
     name, warning = sprites.pick_character(tmp_path, "dog")
     assert name is None
     assert warning
+
+
+def test_non_integer_upscale_is_smoothed(tmp_path):
+    """1.3배 같은 어중간한 확대를 nearest 로 하면 픽셀이 들쭉날쭉해진다."""
+    d = make_char(tmp_path, "dog", ["idle_0.png"])
+    spec = sprites.load_spec(d)
+    assert spec.use_smooth(1.3) is True
+    assert spec.use_smooth(2.0) is False      # 도트 정수배 확대는 그대로
+    assert spec.use_smooth(3.0) is False
+    assert spec.use_smooth(0.65) is True

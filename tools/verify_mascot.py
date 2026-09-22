@@ -80,6 +80,18 @@ class Verifier:
         while not done:
             self.app.processEvents()
 
+    def wait_until(self, predicate, ms: int = 3000) -> bool:
+        """조건이 참이 될 때까지 기다린다.
+
+        합성 마우스 입력은 언제 도착할지 보장되지 않는다. 고정 시간만큼 돌리고
+        바로 판정하면, 앱은 멀쩡한데 검증만 간헐적으로 실패한다.
+        """
+        for _ in range(max(1, ms // 100)):
+            if predicate():
+                return True
+            self.pump(100)
+        return bool(predicate())
+
     # --- 1. 캐릭터가 준비되어 있는가 --------------------------------------
 
     def step_characters(self) -> None:
@@ -380,10 +392,22 @@ class Verifier:
                 self.pump(200)
                 center = wa.overlay.mapToGlobal(wa.overlay._body.center())
                 realinput.move(center.x(), center.y())
-                self.pump(2000)
+                self.wait_until(lambda: wa.overlay.meaning_visible, 3000)
+                from PySide6.QtGui import QCursor
+                o = wa.overlay
+                print(f"        커서 {QCursor.pos().x()},{QCursor.pos().y()}  "
+                      f"겨냥 {center.x()},{center.y()}  "
+                      f"hover_rect {o.hover_rect().x()},{o.hover_rect().y()} "
+                      f"{o.hover_rect().width()}x{o.hover_rect().height()}  "
+                      f"_hovered={o._hovered} 동작={o.mascot.action} "
+                      f"뜻있음={o.has_meaning}")
                 self.check("커서를 올려 두면 걸어서 도망가지 않는다",
                            wa.overlay.hover_rect().contains(center))
                 self.check("올려 둔 동안 뜻이 계속 보인다",
+                           wa.overlay.meaning_visible)
+                # 잠깐 더 두어도 걸어가 버리지 않아야 한다 (이게 원래 문제였다).
+                self.pump(1500)
+                self.check("한참 올려 둬도 뜻이 닫히지 않는다",
                            wa.overlay.meaning_visible)
 
                 shown = wa.overlay._word

@@ -93,11 +93,6 @@ PIXEL_DOGS_NAMES = {
 HUSKY_CREDITS = ("Dog (husky) sprites by rmazanek - CC0 / public domain, "
                  "no attribution required. https://opengameart.org/content/dog-3")
 
-# Shimeji 규격이 실제로 도는지 보여주는 본보기. 원조 Shimeji 마스코트이고
-# New BSD 라 마음대로 쓸 수 있다. 다른 Shimeji 팩을 넣는 법은 README 참고.
-KURO_REPO = ("https://raw.githubusercontent.com/weirdogamergirl/shimeji-ee/"
-             "master/img/KuroShimeji")
-KURO_FRAMES = 46
 
 DOWNLOADS = {
     "dog_medium.png": "https://opengameart.org/sites/default/files/dog_medium.png",
@@ -203,36 +198,6 @@ def inbox_sheets(force: bool) -> int:
     return 0
 
 
-def shimeji_demo(force: bool) -> int:
-    """원조 Shimeji 마스코트를 받아 import_shimeji 로 옮긴다."""
-    out = SPRITES / "kuro"
-    if out.exists() and not force:
-        return 0
-    cache = CACHE / "kuro"
-    cache.mkdir(parents=True, exist_ok=True)
-    got = 0
-    for n in range(1, KURO_FRAMES + 1):
-        target = cache / ("shime" + str(n) + ".png")
-        if target.exists() and not force:
-            got += 1
-            continue
-        try:
-            with urllib.request.urlopen(KURO_REPO + "/shime" + str(n) + ".png",
-                                        timeout=30) as response:
-                data = response.read()
-        except (urllib.error.URLError, TimeoutError) as exc:
-            print("  ! kuro shime" + str(n) + " 를 받지 못했습니다: " + str(exc),
-                  file=sys.stderr)
-            return 0      # 본보기일 뿐이므로 실패해도 전체를 막지 않는다
-        target.write_bytes(data)
-        got += 1
-    print("  kuro: 프레임 " + str(got) + "장")
-
-    import import_shimeji
-    shutil.rmtree(out, ignore_errors=True)
-    return import_shimeji.main([str(cache), "--out", str(out), "--scale", "0.8"])
-
-
 def download(name: str, url: str, force: bool) -> Path:
     CACHE.mkdir(parents=True, exist_ok=True)
     target = CACHE / name
@@ -282,10 +247,6 @@ def main(argv=None) -> int:
     if pixel_dogs(args.force) != 0:
         return 1
     if inbox_sheets(args.force) != 0:
-        return 1
-
-    print("4) Shimeji 본보기")
-    if shimeji_demo(args.force) != 0:
         return 1
 
     print("\n완료. 트레이 > 캐릭터 에서 고를 수 있습니다.")

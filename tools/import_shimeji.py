@@ -163,7 +163,9 @@ def main(argv=None) -> int:
         if scale is None:
             # 서 있는 모습의 긴 변을 기준으로 잡는다. 캔버스가 아니라 실제 그림 크기다.
             idle = rects[chosen["idle"][0]]
-            scale = round(args.fit / max(idle.width(), idle.height()), 2)
+            # 키우지는 않는다. Shimeji 그림은 도트가 아니라서 확대하면 흐려지기만
+            # 하고 얻는 게 없다. 작게 그려진 팩은 작은 채로 둔다.
+            scale = min(1.0, round(args.fit / max(idle.width(), idle.height()), 2))
 
         meta = {"fps": args.fps, "scale": scale, "facing": args.facing,
                 "actions": {"walk": {"fps": 8}, "run": {"fps": 12}}}

@@ -165,8 +165,6 @@ sprites/
 - `cat` — [Elthen](https://elthen.itch.io/2d-pixel-art-cat-sprites). itch.io 라 `Cat Sprite Sheet.png`
   를 직접 받아 `raw/inbox/` 에 두면 잘라 넣습니다. 0원 가능·상업적 사용 허용이고
   작가가 후원을 반깁니다.
-- `kuro` — 원조 Shimeji 마스코트. New BSD 라 마음대로 쓸 수 있고, Shimeji 변환기가
-  실제로 도는지 보여주는 본보기입니다. GitHub 에서 바로 내려받습니다.
 - 강아지 24마리 — [Pixel Dogs by Benvictus](https://benvictus.itch.io/pixel-dogs).
   털색으로 이름이 붙어 있습니다: `tan` `taupe` `slate` `blue` `rust` `white`
   `chocolate` `golden`, 흰 바탕에 얼룩이 있는 `patch-brown` `patch-grey`
