@@ -144,8 +144,14 @@ def _quoted(path) -> str:
     return '"' + str(path) + '"'
 
 
-def autostart_command(pythonw: str, script: str) -> str:
-    """콘솔 없는 pythonw.exe 로 실행한다. python.exe 를 쓰면 콘솔 창이 계속 떠 있다."""
+def autostart_command(pythonw: str, script: str | None = None) -> str:
+    """콘솔 없는 pythonw.exe 로 실행한다. python.exe 를 쓰면 콘솔 창이 계속 떠 있다.
+
+    PyInstaller 로 얼린 실행 파일이면 script 를 None 으로 준다. 그때 main.py 를
+    뒤에 붙이면 실행 파일이 그걸 인자로 받아 argparse 가 죽는다.
+    """
+    if script is None:
+        return _quoted(pythonw)
     return _quoted(pythonw) + " " + _quoted(script)
 
 

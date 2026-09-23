@@ -9,3 +9,7 @@ raw/sprites/
 
 # Shimeji 원본 캐시. tools/import_shimeji.py 가 다시 만든다.
 /raw/shimeji/
+
+# PyInstaller 산출물. tools/build_exe.py 가 다시 만든다.
+/build/
+/dist/

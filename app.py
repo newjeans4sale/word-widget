@@ -307,10 +307,14 @@ class WidgetApp:
                              + "\n기존 목록을 유지합니다")
 
     def _on_autostart(self, enabled: bool) -> None:
-        pythonw = Path(sys.executable).with_name("pythonw.exe")
-        if not pythonw.exists():
-            pythonw = Path(sys.executable)
-        command = platform_win.autostart_command(pythonw, self.base_dir / "main.py")
+        if getattr(sys, "frozen", False):
+            # 얼린 실행 파일은 그 자체가 앱이다. 스크립트 경로를 붙이면 안 된다.
+            command = platform_win.autostart_command(sys.executable)
+        else:
+            pythonw = Path(sys.executable).with_name("pythonw.exe")
+            if not pythonw.exists():
+                pythonw = Path(sys.executable)
+            command = platform_win.autostart_command(pythonw, self.base_dir / "main.py")
         if platform_win.set_autostart(enabled, command):
             self.tray.notify("자동 실행",
                              "켜짐 - 부팅 시 자동으로 뜹니다" if enabled else "꺼짐")

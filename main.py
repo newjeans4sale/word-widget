@@ -99,14 +99,16 @@ def main(argv=None) -> int:
     keepalive.start(200)
     keepalive.timeout.connect(lambda: None)
 
+    # 셀프테스트보다 먼저 import 한다. 얼린 실행 파일에서 DLL 이 빠지면 여기서
+    # 터지는데, 셀프테스트가 import 전에 끝나 버리면 빌드가 멀쩡한 줄 알게 된다.
+    from app import WidgetApp
+
     if args.selftest is not None:
         log.info("셀프테스트 모드: %dms 후 종료", args.selftest)
         QTimer.singleShot(args.selftest, app.quit)
         rc = app.exec()
         log.info("셀프테스트 종료 (rc=%d)", rc)
         return rc
-
-    from app import WidgetApp
 
     widget_app = WidgetApp(app, BASE_DIR)
     widget_app.start()
