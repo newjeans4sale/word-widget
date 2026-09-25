@@ -96,6 +96,27 @@ def set_click_through(hwnd: int, enabled: bool) -> bool:
         return False
 
 
+HWND_TOPMOST = -1
+
+
+def raise_topmost(hwnd: int) -> bool:
+    """항상-위 창들 사이에서 맨 앞으로 다시 올린다. 포커스는 건드리지 않는다.
+
+    WS_EX_TOPMOST 는 '항상 위 창 무리'에 넣어 줄 뿐이다. 그 무리 안의 순서는 마지막으로
+    활성화된 쪽이 앞이라, 작업표시줄을 누르거나 알림·다른 항상-위 앱이 뜨면 위젯이
+    그 뒤로 밀리고 스스로는 돌아오지 않는다. 주기적으로 불러 되찾는다.
+    """
+    if not _init():
+        return False
+    try:
+        return bool(_user32.SetWindowPos(
+            wintypes.HWND(hwnd), wintypes.HWND(HWND_TOPMOST), 0, 0, 0, 0,
+            SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE))
+    except Exception:
+        log.debug("맨 앞으로 올리기 실패", exc_info=True)
+        return False
+
+
 def get_ex_style(hwnd: int) -> int | None:
     """진단용. 현재 확장 스타일 비트를 돌려준다."""
     if not _init():

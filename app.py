@@ -338,6 +338,14 @@ class WidgetApp:
     # --- 전체화면 -------------------------------------------------------
 
     def _check_fullscreen(self) -> None:
+        self._check_fullscreen_visibility()
+        # 다른 항상-위 창(작업표시줄, 알림, 다른 앱)에 밀려 뒤로 간 것을 되찾는다.
+        # 숨겨 둔 동안에는 하지 않는다 - 전체화면 앱 위로 튀어나오면 안 된다.
+        if (platform_win.IS_WINDOWS and self.overlay.isVisible()
+                and not self._hidden_by_fullscreen):
+            platform_win.raise_topmost(int(self.overlay.winId()))
+
+    def _check_fullscreen_visibility(self) -> None:
         if not self.cfg.hide_on_fullscreen:
             if self._hidden_by_fullscreen:
                 self.overlay.show()
