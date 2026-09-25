@@ -73,6 +73,11 @@ def main() -> int:
         print("셀프테스트가 끝나지 않았습니다", file=sys.stderr)
         return 1
     text = log.read_text(encoding="utf-8", errors="replace") if log.exists() else ""
+    if "이미 실행 중" in text:
+        # 위젯이 떠 있으면 단일 인스턴스 잠금 때문에 exe 가 바로 빠진다.
+        # 빌드가 잘못된 게 아니라 확인을 못 한 것이다.
+        print("셀프테스트 건너뜀: 위젯이 이미 떠 있습니다. 끄고 다시 빌드하면 확인됩니다.")
+        return 0
     ok = proc.returncode == 0 and "셀프테스트 종료" in text
     print("셀프테스트:", "통과" if ok else f"실패 (rc={proc.returncode})")
     if not ok:
