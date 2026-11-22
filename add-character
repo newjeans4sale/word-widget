@@ -1,0 +1,39 @@
+#!/bin/bash
+# 받은 Shimeji 팩을 이 Mac 의 위젯에 캐릭터로 넣는다.
+#
+#   ./add-character ~/Downloads/받은파일.zip [이름]
+#
+# 이름을 안 주면 zip 파일 이름을 쓴다. 캐릭터는 이 Mac 의 앱 데이터 폴더에만 들어가므로
+# 저장소에 커밋되지 않고, ./start 로 업데이트해도 남아 있다.
+set -euo pipefail
+cd "$(dirname "$0")"
+
+if [ $# -lt 1 ] || [ ! -e "$1" ]; then
+    echo "Usage: ./add-character ~/Downloads/pack.zip [name]"
+    exit 1
+fi
+if [ ! -x .venv/bin/python ]; then
+    echo "Run ./start first."
+    exit 1
+fi
+
+src="$1"
+name="${2:-$(basename "${src%.*}")}"
+name=$(echo "$name" | tr '[:upper:] ' '[:lower:]-')
+out="$HOME/Library/Application Support/word-widget/sprites/$name"
+
+.venv/bin/python tools/import_shimeji.py "$src" --out "$out"
+
+# 떠 있는 위젯을 다시 켜야 Character 메뉴에 나타난다. 앱의 실행 파일 경로로만 찾는다.
+APP_EXE="/Applications/WordWidget.app/Contents/MacOS/word-widget"
+pid=$(pgrep -f "^${APP_EXE}" || true)
+if [ -n "$pid" ]; then
+    kill -INT $pid 2>/dev/null || true
+    for _ in 1 2 3 4 5 6 7 8 9 10; do
+        pgrep -f "^${APP_EXE}" >/dev/null || break
+        sleep 0.5
+    done
+fi
+[ -d /Applications/WordWidget.app ] && open /Applications/WordWidget.app
+
+echo "Added '$name'. Choose it in the menu bar: W > Character > $name"

@@ -162,6 +162,31 @@ sprites/
 > 대부분의 Shimeji 팩은 기존 애니/게임 캐릭터를 그린 것입니다. 개인 사용 범위를
 > 넘기지 않는 편이 안전합니다.
 
+#### 받은 캐릭터 팩 넣기 (Mac)
+
+유료 팩이나 작가가 "다시 배포하지 말라"고 적어 둔 팩은 저장소에 넣지 않고, 쓰는 사람이
+직접 받아 자기 Mac 에 넣습니다. `./start` 로 위젯을 한 번 설치해 둔 Mac 이면 됩니다.
+
+1. 팩을 내려받습니다. 압축은 풀지 않아도 됩니다.
+   - 예: 시나모롤 — [Tsuki MoonLoaf 의 Cinnamoroll Desktop Pet](https://ko-fi.com/s/877236c848)
+     (작가가 재배포를 금지했습니다. 각자 이 페이지에서 받습니다)
+2. 터미널을 열고 word-widget 폴더에서 이렇게 칩니다. 파일 이름은 받은 것으로 바꾸고,
+   맨 끝은 메뉴에 나올 이름입니다.
+
+   ```
+   cd ~/word-widget
+   ./add-character ~/Downloads/받은파일.zip cinnamoroll
+   ```
+
+   `cd` 뒤의 경로는 word-widget 을 받아 둔 곳입니다. 모르면 `cd ` 를 치고 Finder 에서
+   word-widget 폴더를 터미널 창으로 끌어다 놓으면 경로가 들어갑니다. 파일 이름도 같은
+   방법으로 받은 zip 을 끌어다 놓으면 됩니다.
+3. 위젯이 다시 켜지면 메뉴 막대의 W > **Character** 에서 고릅니다.
+
+넣은 캐릭터는 이 Mac 에만 있고(`~/Library/Application Support/word-widget/sprites/`),
+`git pull` 과 `./start` 로 업데이트해도 남아 있습니다. 팩 안에 Windows 용과 Mac 용 파일이
+따로 있다면 아무 쪽이나 넣어도 됩니다. 캐릭터 그림(`shime1.png` …)은 같습니다.
+
 ### 기본으로 들어 있는 캐릭터
 
 `tools/fetch_sprites.py` 를 한 번 돌리면 만들어집니다.
