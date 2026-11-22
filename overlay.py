@@ -10,6 +10,7 @@ from PySide6.QtGui import (QColor, QFont, QFontDatabase, QFontMetricsF, QGuiAppl
                            QPainter, QPainterPath, QPen)
 from PySide6.QtWidgets import QWidget
 
+import platform_mac
 import platform_win
 
 log = logging.getLogger(__name__)
@@ -436,6 +437,10 @@ class WordOverlay(QWidget):
         # 네이티브 핸들이 생긴 지금 직접 건다. 안 하면 이동 모드 드래그 때 포커스를 뺏는다.
         if platform_win.IS_WINDOWS:
             platform_win.set_no_activate(int(self.winId()))
+        if platform_mac.IS_MAC:
+            # 이동 모드를 켜고 끌 때마다 Qt 가 창을 새로 만들고 다시 show 한다. 그때마다 건다.
+            platform_mac.setup_overlay(int(self.winId()))
+            platform_mac.set_click_through(int(self.winId()), not self._move_mode)
         handle = self.windowHandle()
         if handle is not None:
             try:

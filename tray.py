@@ -95,7 +95,7 @@ class TrayController(QObject):
     quit_requested = Signal()
     became_available = Signal()
 
-    def __init__(self, parent=None, show_autostart: bool = IS_WINDOWS):
+    def __init__(self, parent=None, show_autostart: bool = IS_WINDOWS or IS_MAC):
         super().__init__(parent)
         self._icon = make_tray_icon()
         self.menu = QMenu()
@@ -123,7 +123,8 @@ class TrayController(QObject):
         self.act_autostart = None
         if show_autostart:
             self.menu.addSeparator()
-            self.act_autostart = self._add_check("Windows 시작 시 실행", self.autostart_toggled)
+            self.act_autostart = self._add_check(
+                "로그인 시 실행" if IS_MAC else "Windows 시작 시 실행", self.autostart_toggled)
         self.menu.addSeparator()
         self.act_quit = self._add_action("종료", self.quit_requested)
 

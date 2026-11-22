@@ -303,15 +303,24 @@ pytest는 반드시 **프로젝트 루트에서** 실행하세요. `sys.path`에
 
 ## macOS
 
-코드는 플랫폼을 가려 동작하지만 이 기기에서 검증하지 못했습니다. 알려진 제약:
+Windows 판과 같은 동작을 `platform_mac.py` 가 맡습니다. 포커스를 뺏지 않고, 클릭이 통과하고,
+다른 항상-위 창에 밀리면 다시 올라오고, 전체화면 앱 위에서는 숨습니다. 여기에 더해 모든
+데스크탑(Space)과 전체화면 Space 에 같은 창이 보이게 합니다.
 
-- `WA_MacAlwaysShowToolWindow`를 켜 두었습니다. 이게 없으면 앱이 최전면이 아닐 때
-  창이 사라져 사실상 거의 안 보입니다.
-- pyobjc 없이는 **Dock 아이콘을 숨길 수 없습니다.** `.app` 번들로 묶고
-  `Info.plist`에 `LSUIElement = 1`을 넣는 것이 유일한 우회입니다.
-- **모든 Space에 표시할 수 없습니다.** 위젯이 만들어진 Space에만 있습니다. 우회 방법 없음.
-- **다른 앱의 전체화면 Space 위에는 그릴 수 없습니다.** 우회 방법 없음.
-- 클릭 통과 토글에 네이티브 경로가 없어 전환 시 한 프레임 깜빡입니다.
+```
+python3.12 -m venv .venv
+.venv/bin/python -m pip install PySide6==6.8.3 pyobjc-core pyobjc-framework-Cocoa pyobjc-framework-Quartz pytest pyinstaller
+.venv/bin/python tools/build_mac.py            # dist/WordWidget.app
+.venv/bin/python tools/build_mac.py --install  # /Applications 에 넣고 로그인 시 실행 등록 후 켬
+```
+
+- Dock 과 Cmd+Tab 에 뜨지 않고 메뉴 막대 아이콘만 있습니다 (`LSUIElement`).
+- 단어장, 설정, 캐릭터, 로그는 `~/Library/Application Support/word-widget/` 에 있습니다.
+  첫 실행 때 앱 안의 기본 파일을 꺼내 두고, 이후에는 덮어쓰지 않습니다.
+- 메뉴 막대 > **로그인 시 실행** 은 `~/Library/LaunchAgents/io.github.newjeans4sale.word-widget.plist` 를 둡니다.
+- 서명이 없는 앱이라 다른 Mac 에서 처음 열 때 한 번, 설정 > 개인정보 보호 및 보안 >
+  '그래도 열기' 가 필요합니다. 빌드한 Mac 과 같은 칩(애플 실리콘/인텔)에서만 돕니다.
+- Segoe UI 는 macOS 에 없어 Helvetica Neue 로 대신 그립니다.
 - 글자 크기 상한은 24pt입니다 (Finder 아이콘 라벨 12pt의 2배).
 
 ## 구조
@@ -323,6 +332,7 @@ config.py        설정 로드/저장 + 검증          (Qt 없음, 테스트됨
 wordsource.py    단어 로딩 + 셔플백             (Qt 없음, 테스트됨)
 osfont.py        OS 아이콘 글꼴 크기 읽기       (Qt 없음)
 platform_win.py  클릭 통과, 자동 실행 레지스트리 (Windows 전용)
+platform_mac.py  같은 일의 macOS 판, 자동 실행 LaunchAgent, .app 데이터 폴더
 fullscreen.py    전체화면 감지                  (Windows 전용)
 overlay.py        텍스트 오버레이 창
 mascot.py         마스코트 상태기계 (걷기/앉기/낙하)  (Qt 없음, 테스트됨)

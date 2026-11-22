@@ -14,6 +14,10 @@ from pathlib import Path
 
 # 얼린 배포를 고려해 __file__ 이 아니라 argv[0] 을 기준으로 삼는다.
 BASE_DIR = Path(sys.argv[0]).resolve().parent
+if sys.platform == "darwin" and getattr(sys, "frozen", False):
+    # .app 안은 쓰면 안 되는 곳이다. 단어장과 설정은 사용자 폴더에 둔다.
+    import platform_mac
+    BASE_DIR = platform_mac.prepare_data_dir(Path(getattr(sys, "_MEIPASS", BASE_DIR)) / "seed")
 LOG_PATH = BASE_DIR / "word-widget.log"
 SINGLETON_KEY = "word-widget-singleton"
 

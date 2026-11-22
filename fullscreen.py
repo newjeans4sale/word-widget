@@ -56,7 +56,10 @@ def _class_name(hwnd) -> str:
 
 
 def is_foreground_fullscreen() -> bool:
-    """전경 창이 자기 모니터를 가득 채우고 있으면 True. macOS 에서는 항상 False."""
+    """전경 창이 자기 모니터를 가득 채우고 있으면 True."""
+    if sys.platform == "darwin":
+        import platform_mac
+        return platform_mac.is_foreground_fullscreen()
     if not _init():
         return False
     try:

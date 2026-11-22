@@ -20,6 +20,7 @@ from PySide6.QtGui import (QColor, QCursor, QFont, QFontMetricsF, QGuiApplicatio
                            QPainter, QPainterPath, QPen)
 from PySide6.QtWidgets import QWidget
 
+import platform_mac
 import platform_win
 import sprites as sprites_mod
 from mascot import Mascot
@@ -560,6 +561,8 @@ class MascotOverlay(QWidget):
             # Qt 6.8 은 WindowDoesNotAcceptFocus 를 WS_EX_NOACTIVATE 로 옮겨주지 않는다.
             # 이게 없으면 캐릭터를 잡는 순간 편집기가 포커스를 잃는다.
             platform_win.set_no_activate(int(self.winId()))
+        if platform_mac.IS_MAC:
+            platform_mac.setup_overlay(int(self.winId()))
         self._clock.restart()
         self._timer.start(TICK_MS)
 

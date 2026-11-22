@@ -13,6 +13,7 @@ import config as config_mod
 import fullscreen
 import mascot_overlay
 import osfont
+import platform_mac
 import platform_win
 from overlay import WordOverlay
 from tray import TrayController
@@ -24,6 +25,10 @@ FULLSCREEN_POLL_MS = 1500
 HOVER_POLL_MS = 120
 # 커서가 지나가기만 해도 뜻이 번쩍이지 않도록 잠깐 머무를 것을 요구한다.
 HOVER_DWELL_TICKS = 2
+
+
+# 자동 실행 방식은 OS 마다 다르다. 같은 이름의 함수로 고른다.
+autostart = platform_mac if platform_mac.IS_MAC else platform_win
 
 
 class WidgetApp:
@@ -163,7 +168,7 @@ class WidgetApp:
         self.tray.act_pause.setChecked(self._paused)
         if self.tray.act_autostart is not None:
             self.tray.act_autostart.blockSignals(True)
-            self.tray.act_autostart.setChecked(platform_win.is_autostart_enabled())
+            self.tray.act_autostart.setChecked(autostart.is_autostart_enabled())
             self.tray.act_autostart.blockSignals(False)
 
         self._sync_tray_mode()
@@ -309,15 +314,16 @@ class WidgetApp:
     def _on_autostart(self, enabled: bool) -> None:
         if getattr(sys, "frozen", False):
             # 얼린 실행 파일은 그 자체가 앱이다. 스크립트 경로를 붙이면 안 된다.
-            command = platform_win.autostart_command(sys.executable)
+            command = autostart.autostart_command(sys.executable)
         else:
             pythonw = Path(sys.executable).with_name("pythonw.exe")
             if not pythonw.exists():
                 pythonw = Path(sys.executable)
-            command = platform_win.autostart_command(pythonw, self.base_dir / "main.py")
-        if platform_win.set_autostart(enabled, command):
+            command = autostart.autostart_command(pythonw, self.base_dir / "main.py")
+        if autostart.set_autostart(enabled, command):
+            when = "로그인하면" if platform_mac.IS_MAC else "부팅 시"
             self.tray.notify("자동 실행",
-                             "켜짐 - 부팅 시 자동으로 뜹니다" if enabled else "꺼짐")
+                             f"켜짐 - {when} 자동으로 뜹니다" if enabled else "꺼짐")
         else:
             self.tray.notify("자동 실행 설정 실패", "로그를 확인해 주세요")
             if self.tray.act_autostart is not None:
@@ -341,9 +347,11 @@ class WidgetApp:
         self._check_fullscreen_visibility()
         # 다른 항상-위 창(작업표시줄, 알림, 다른 앱)에 밀려 뒤로 간 것을 되찾는다.
         # 숨겨 둔 동안에는 하지 않는다 - 전체화면 앱 위로 튀어나오면 안 된다.
-        if (platform_win.IS_WINDOWS and self.overlay.isVisible()
-                and not self._hidden_by_fullscreen):
-            platform_win.raise_topmost(int(self.overlay.winId()))
+        if self.overlay.isVisible() and not self._hidden_by_fullscreen:
+            if platform_win.IS_WINDOWS:
+                platform_win.raise_topmost(int(self.overlay.winId()))
+            elif platform_mac.IS_MAC:
+                platform_mac.raise_topmost(int(self.overlay.winId()))
 
     def _check_fullscreen_visibility(self) -> None:
         if not self.cfg.hide_on_fullscreen:
