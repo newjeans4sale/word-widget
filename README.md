@@ -175,9 +175,10 @@ sprites/
 
    ```
    cd ~/word-widget
-   ./add-character ~/Downloads/받은파일.zip cinnamoroll
+   ./add-character ~/Downloads/받은파일.zip cinnamoroll-tsuki
    ```
 
+   이미 같은 이름의 캐릭터가 있으면 덮어쓰지 않고 `-2`, `-3` 을 붙여 따로 넣습니다.
    `cd` 뒤의 경로는 word-widget 을 받아 둔 곳입니다. 모르면 `cd ` 를 치고 Finder 에서
    word-widget 폴더를 터미널 창으로 끌어다 놓으면 경로가 들어갑니다. 파일 이름도 같은
    방법으로 받은 zip 을 끌어다 놓으면 됩니다.

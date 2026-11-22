@@ -20,7 +20,16 @@ fi
 src="$1"
 name="${2:-$(basename "${src%.*}")}"
 name=$(echo "$name" | tr '[:upper:] ' '[:lower:]-')
-out="$HOME/Library/Application Support/word-widget/sprites/$name"
+
+# 이미 있는 캐릭터를 덮어쓰지 않는다. 같은 이름이 있으면 -2, -3 … 을 붙인다.
+dir="$HOME/Library/Application Support/word-widget/sprites"
+base="$name"
+n=2
+while [ -e "$dir/$name" ] || [ -e "sprites/$name" ]; do
+    name="$base-$n"
+    n=$((n + 1))
+done
+out="$dir/$name"
 
 .venv/bin/python tools/import_shimeji.py "$src" --out "$out"
 
