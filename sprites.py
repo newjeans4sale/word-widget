@@ -44,6 +44,8 @@ FALLBACK = {
     "bark": ("idle",),
     "fall": ("idle",),
     "drag": ("fall", "idle"),
+    # 벽으로 뛰어오르는 중. 따로 그린 그림이 없으면 떨어지는 그림이나 달리는 그림을 쓴다.
+    "jump": ("fall", "run", "walk", "idle"),
 }
 
 DEFAULT_FPS = 8.0
@@ -312,23 +314,28 @@ class SpriteSet:
     def resolve(self, action: str) -> ActionSpec:
         return self.spec.resolve(action)
 
-    def frame(self, action: str, index: int, facing: int = 1):
+    def frame(self, action: str, index: int, facing: int = 1, angle: int = 0):
         """그릴 QPixmap 하나. 읽지 못한 파일은 None 을 돌려준다.
 
         facing 은 캐릭터가 **보는** 방향이다. 원본이 반대쪽을 보고 있으면 좌우로 뒤집는다.
+        angle 은 시계 방향 회전(0/90/180/270)이다. 벽과 천장에서 발이 그 면에 닿게 한다.
         """
         spec = self.spec.resolve(action)
         if spec.frame_count == 0:
             return None
         index = index % spec.frame_count
         flip = -1 if facing != self.spec.facing else 1
-        key = (spec.name, index, flip)
+        angle = int(angle) % 360
+        key = (spec.name, index, flip, angle)
 
         cached = self._cache.get(key)
         if cached is not None:
             return cached
 
         pixmap = self._load(spec.files[index], flip)
+        if pixmap is not None and angle:
+            from PySide6.QtGui import QTransform
+            pixmap = pixmap.transformed(QTransform().rotate(angle))
         if pixmap is not None:
             self._cache[key] = pixmap
         return pixmap

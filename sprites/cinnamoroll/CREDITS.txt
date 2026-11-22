@@ -1,0 +1,3 @@
+Imported from a Shimeji character pack.
+Shimeji frame layout: shimeji-ee conf/actions.xml.
+The artwork belongs to whoever drew it - most packs use existing characters, so keep this to personal use unless you know otherwise.

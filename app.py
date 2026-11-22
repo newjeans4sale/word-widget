@@ -92,6 +92,7 @@ class WidgetApp:
         t.open_words.connect(self._open_words)
         t.open_config.connect(self._open_config)
         t.autostart_toggled.connect(self._on_autostart)
+        t.fullscreen_toggled.connect(self._on_show_over_fullscreen)
         t.quit_requested.connect(self.quit)
         t.became_available.connect(self._on_tray_available)
         t.mascot_mode_toggled.connect(self._on_mascot_mode)
@@ -160,6 +161,9 @@ class WidgetApp:
         self.tray.act_wander.blockSignals(True)
         self.tray.act_wander.setChecked(bool(self.cfg.mascot_wander))
         self.tray.act_wander.blockSignals(False)
+        self.tray.act_fullscreen.blockSignals(True)
+        self.tray.act_fullscreen.setChecked(not self.cfg.hide_on_fullscreen)
+        self.tray.act_fullscreen.blockSignals(False)
 
     # --- 기동 / 종료 ----------------------------------------------------
 
@@ -342,6 +346,12 @@ class WidgetApp:
         QDesktopServices.openUrl(QUrl.fromLocalFile(str(self.config_path)))
 
     # --- 전체화면 -------------------------------------------------------
+
+    def _on_show_over_fullscreen(self, on: bool) -> None:
+        """켜면 전체화면 앱 위에서도 숨지 않는다."""
+        self.cfg.hide_on_fullscreen = not on
+        self._save_config()
+        self._check_fullscreen_visibility()
 
     def _check_fullscreen(self) -> None:
         self._check_fullscreen_visibility()

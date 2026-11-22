@@ -86,6 +86,7 @@ class TrayController(QObject):
     wander_toggled = Signal(bool)
     character_selected = Signal(str)
     autostart_toggled = Signal(bool)
+    fullscreen_toggled = Signal(bool)
     next_word = Signal()
     prev_word = Signal()
     reset_requested = Signal()
@@ -120,6 +121,7 @@ class TrayController(QObject):
         self.act_open_words = self._add_action("Open word list", self.open_words)
         self.act_open_config = self._add_action("Open settings", self.open_config)
         self.act_reset = self._add_action("Reset look and position", self.reset_requested)
+        self.act_fullscreen = self._add_check("Show over full screen apps", self.fullscreen_toggled)
         self.act_autostart = None
         if show_autostart:
             self.menu.addSeparator()

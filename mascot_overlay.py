@@ -23,7 +23,8 @@ from PySide6.QtWidgets import QWidget
 import platform_mac
 import platform_win
 import sprites as sprites_mod
-from mascot import Mascot
+import mascot as mascot_mod
+from mascot import Area, Mascot
 from overlay import IS_MAC, clamp_to_screens, resolve_font_family
 
 log = logging.getLogger(__name__)
@@ -58,7 +59,7 @@ def available(sprites_dir) -> list[str]:
 
 
 class MascotOverlay(QWidget):
-    """화면 바닥을 걸어다니며 단어를 말풍선으로 들고 다니는 창."""
+    """화면 가장자리(바닥, 벽, 천장)를 다니며 단어를 말풍선으로 들고 다니는 창."""
 
     moved = Signal(int, int)          # 발밑 x, y — 사용자가 옮겨 놓았을 때만
     clicked = Signal()                # 몸통이나 말풍선을 클릭 (드래그가 아닌)
@@ -85,6 +86,9 @@ class MascotOverlay(QWidget):
         self._pixmap = None
         self._body = QRect()          # 창 안에서 캐릭터가 차지하는 영역
         self._bubble = QRect()
+        self._anchor = (0.0, 0.0)     # 창 안에서 발밑 기준점의 위치
+        self._side = mascot_mod.FLOOR  # 지금 그린 모습이 딛고 있는 면
+        self._upright_w = 32          # 돌리기 전 그림의 폭 = 딛는 면을 따라 잰 몸 길이
         self._lines: list[tuple[str, QColor]] = []
         self._hovered = False
         self._wander_wanted = True
@@ -199,7 +203,10 @@ class MascotOverlay(QWidget):
         self._relayout()      # 화살표가 나타나거나 사라진다
 
     def _apply_wander(self) -> None:
-        self.mascot.set_wander(self._wander_wanted and not self._hovered)
+        # 산책을 끄면 바닥으로 내려와 서고, 커서를 올린 것은 그 자리에 붙들어 둔다.
+        # 벽에 붙은 캐릭터를 가리켰다고 떨어지면 안 된다.
+        self.mascot.set_wander(self._wander_wanted)
+        self.mascot.set_held(self._hovered)
 
     def set_scale(self, scale: float) -> None:
         if self._sprites:
@@ -265,17 +272,21 @@ class MascotOverlay(QWidget):
 
     # --- 화면 계산 ------------------------------------------------------
 
-    def _screen_bounds(self) -> tuple[float, float, float]:
-        """캐릭터의 발밑이 갈 수 있는 (왼쪽, 오른쪽, 바닥).
+    def _screen_bounds(self) -> Area:
+        """캐릭터가 다닐 수 있는 영역 = 지금 있는 화면의 availableGeometry.
 
-        바닥은 availableGeometry 라 작업표시줄 위에 정확히 선다.
+        그래서 바닥은 작업표시줄(Dock) 위, 천장은 메뉴 막대 아래에 정확히 붙는다.
         """
         state = self.mascot.state
-        probe = QPoint(int(state.x), int(state.y) - 1)
+        # 가장자리에 딱 붙어 있으면 그 점이 화면 밖으로 판정될 수 있어 안쪽을 본다.
+        probe = QPoint(int(state.x) + (1 if state.surface == mascot_mod.LEFT else
+                                       -1 if state.surface == mascot_mod.RIGHT else 0),
+                       int(state.y) + (1 if state.surface == mascot_mod.CEILING else -1))
         screen = QGuiApplication.screenAt(probe) or QGuiApplication.primaryScreen()
         avail = screen.availableGeometry()
-        half = (self._body.width() or 32) / 2.0
-        return (avail.left() + half, avail.right() + 1 - half, float(avail.bottom() + 1))
+        return Area(left=float(avail.left()), top=float(avail.top()),
+                    right=float(avail.right() + 1), bottom=float(avail.bottom() + 1),
+                    half=self._upright_w / 2.0)
 
     def _place_default(self) -> None:
         avail = QGuiApplication.primaryScreen().availableGeometry()
@@ -308,58 +319,118 @@ class MascotOverlay(QWidget):
             lines.append((fit(self._meaning), self._meaning_color))
         return lines
 
+    def _pose(self, state) -> tuple[int, int]:
+        """(시계 방향 회전 각도, 원본 그림이 볼 방향).
+
+        바닥은 그대로, 천장은 뒤집고, 왼쪽 벽은 시계 방향으로, 오른쪽 벽은 반대로
+        90도 돌린다. 그러면 발이 그 면에 닿는다. 돌리면 앞쪽도 같이 돌아가므로
+        가는 쪽을 보도록 원본의 좌우를 맞춘다. 벽에서 facing +1 은 위로 가는 것이다.
+        """
+        side = state.surface
+        if side == mascot_mod.CEILING:
+            return 180, -state.facing
+        if side == mascot_mod.LEFT:
+            return 90, -state.facing
+        if side == mascot_mod.RIGHT:
+            return 270, state.facing
+        return 0, state.facing
+
+    def _frame(self, state):
+        action = self._sprites.resolve(state.action)
+        index = self.mascot.frame_index(action.fps, action.frame_count)
+        angle, look = self._pose(state)
+        return self._sprites.frame(state.action, index, look, angle), angle
+
     def _relayout(self) -> None:
-        """창 크기와 내부 배치를 다시 잡는다. 그림이나 글자가 바뀔 때만 부른다."""
+        """창 크기와 내부 배치를 다시 잡는다. 그림이나 글자, 딛는 면이 바뀔 때만 부른다.
+
+        말풍선은 늘 똑바로 세워 몸의 반대쪽에 둔다. 바닥이면 위, 천장이면 아래,
+        왼쪽 벽이면 오른쪽, 오른쪽 벽이면 왼쪽이다.
+        """
         if self._sprites is None:
             return
 
         state = self.mascot.state
-        action = self._sprites.resolve(state.action)
-        index = self.mascot.frame_index(action.fps, action.frame_count)
-        self._pixmap = self._sprites.frame(state.action, index, state.facing)
+        self._side = state.surface
+        self._pixmap, angle = self._frame(state)
 
         body_w = self._pixmap.width() if self._pixmap else 32
         body_h = self._pixmap.height() if self._pixmap else 32
+        self._upright_w = body_h if angle in (90, 270) else body_w
 
         # 그릴 줄을 여기서 확정해 두고 paintEvent 는 그대로 쓴다.
         # 재는 쪽과 그리는 쪽이 따로 계산하면 한쪽만 바뀌었을 때 글자가 잘린다.
         self._lines = self._bubble_lines()
-        arrows = self._arrows_visible()
         if self._lines:
             fm = QFontMetricsF(self._font)
             text_w = max(fm.horizontalAdvance(t) for t, _ in self._lines)
             line_h = fm.height() + BUBBLE_LINE_GAP
             bubble_w = math.ceil(text_w) + 2 * BUBBLE_PAD_X
             bubble_h = math.ceil(line_h * len(self._lines)) + 2 * BUBBLE_PAD_Y
-            top = bubble_h + BUBBLE_TAIL + BUBBLE_GAP
+            gap = BUBBLE_TAIL + BUBBLE_GAP
         else:
-            bubble_w = bubble_h = 0
-            top = 0
+            bubble_w = bubble_h = gap = 0
 
-        win_w = max(body_w, bubble_w)
-        win_h = top + body_h
-        self._body = QRect((win_w - body_w) // 2, top, body_w, body_h)
-        self._bubble = (QRect((win_w - bubble_w) // 2, 0, bubble_w, bubble_h)
-                        if bubble_w else QRect())
-        # 화살표는 말풍선이 아니라 **몸통 위**에 얹는다. 말풍선은 단어 길이에 따라
-        # 폭이 변해 창이 리사이즈되고, 그러면 누르는 도중에 단추가 커서 밑에서
-        # 빠져나간다. 몸통은 발밑 기준으로 늘 같은 자리에 있어 흔들리지 않는다.
-        if arrows and self._body.width() >= ARROW_MIN_BODY:
-            b = self._body
+        side = self._side
+        if side in (mascot_mod.LEFT, mascot_mod.RIGHT):
+            win_w = body_w + (gap + bubble_w if bubble_w else 0)
+            win_h = max(body_h, bubble_h)
+            body_y = (win_h - body_h) // 2
+            bubble_y = (win_h - bubble_h) // 2
+            if side == mascot_mod.LEFT:
+                self._body = QRect(0, body_y, body_w, body_h)
+                bubble = QRect(body_w + gap, bubble_y, bubble_w, bubble_h)
+                self._anchor = (0.0, body_y + body_h / 2.0)
+            else:
+                self._body = QRect(win_w - body_w, body_y, body_w, body_h)
+                bubble = QRect(0, bubble_y, bubble_w, bubble_h)
+                self._anchor = (float(win_w), body_y + body_h / 2.0)
+        else:
+            win_w = max(body_w, bubble_w)
+            win_h = body_h + (bubble_h + gap if bubble_w else 0)
+            body_x = (win_w - body_w) // 2
+            bubble_x = (win_w - bubble_w) // 2
+            if side == mascot_mod.CEILING:
+                self._body = QRect(body_x, 0, body_w, body_h)
+                bubble = QRect(bubble_x, body_h + gap, bubble_w, bubble_h)
+                self._anchor = (win_w / 2.0, 0.0)
+            else:
+                self._body = QRect(body_x, win_h - body_h, body_w, body_h)
+                bubble = QRect(bubble_x, 0, bubble_w, bubble_h)
+                self._anchor = (win_w / 2.0, float(win_h))
+        self._bubble = bubble if bubble_w else QRect()
+        self._layout_arrows()
+        self._apply_geometry(win_w, win_h)
+
+    def _layout_arrows(self) -> None:
+        """화살표는 말풍선이 아니라 **몸통 위**에 얹는다. 말풍선은 단어 길이에 따라
+        폭이 변해 창이 리사이즈되고, 그러면 누르는 도중에 단추가 커서 밑에서
+        빠져나간다. 몸통은 발밑 기준으로 늘 같은 자리에 있어 흔들리지 않는다.
+
+        벽에 붙어 몸이 세로로 길어지면 위아래 끝에 둔다.
+        """
+        self._prev_rect = QRect()
+        self._next_rect = QRect()
+        if not self._arrows_visible():
+            return
+        b = self._body
+        if b.width() >= ARROW_MIN_BODY:
             size = min(ARROW_W, b.height())
-            y = b.top() + int((b.height() - size) * ARROW_Y_RATIO)
+            ratio = ARROW_Y_RATIO if self._side != mascot_mod.CEILING else 1 - ARROW_Y_RATIO
+            y = b.top() + int((b.height() - size) * ratio)
             self._prev_rect = QRect(b.left(), y, size, size)
             self._next_rect = QRect(b.right() + 1 - size, y, size, size)
-        else:
-            self._prev_rect = QRect()
-            self._next_rect = QRect()
-
-        self._apply_geometry(win_w, win_h)
+        elif b.height() >= ARROW_MIN_BODY:
+            size = min(ARROW_W, b.width())
+            x = b.left() + (b.width() - size) // 2
+            self._prev_rect = QRect(x, b.top(), size, size)
+            self._next_rect = QRect(x, b.bottom() + 1 - size, size, size)
 
     def _apply_geometry(self, win_w: int, win_h: int) -> None:
         state = self.mascot.state
-        x = int(round(state.x - win_w / 2.0))
-        y = int(round(state.y - win_h))
+        ax, ay = self._anchor
+        x = int(round(state.x - ax))
+        y = int(round(state.y - ay))
         rect = QRect(x, y, max(1, win_w), max(1, win_h))
         if self.size() != rect.size():
             # 크기가 바뀔 때만 setGeometry. 매 프레임 resize 하면 레이어드 창이 비싸다.
@@ -378,13 +449,11 @@ class MascotOverlay(QWidget):
         self.mascot.update(dt, self._screen_bounds())
 
         state = self.mascot.state
-        action = self._sprites.resolve(state.action)
-        index = self.mascot.frame_index(action.fps, action.frame_count)
-        pixmap = self._sprites.frame(state.action, index, state.facing)
+        pixmap, _ = self._frame(state)
 
-        if pixmap is not self._pixmap or before[0] != state.action:
-            # 그림이 바뀌면 창 크기도 달라질 수 있다 (앉으면 낮아진다).
-            self._pixmap = pixmap
+        if (pixmap is not self._pixmap or before[0] != state.action
+                or state.surface != self._side):
+            # 그림이 바뀌면 창 크기도 달라질 수 있다 (앉으면 낮아진다, 벽에서는 눕는다).
             self._relayout()
         else:
             self._apply_geometry(self.width(), self.height())
@@ -421,7 +490,13 @@ class MascotOverlay(QWidget):
 
         state = self.mascot.state
         cursor = QCursor.pos()
-        self._drag_grab = (cursor, (state.x - cursor.x(), state.y - cursor.y()))
+        if state.surface == mascot_mod.FLOOR:
+            offset = (state.x - cursor.x(), state.y - cursor.y())
+        else:
+            # 벽이나 천장에서 잡으면 몸을 똑바로 세워 커서가 몸 가운데를 쥐게 한다.
+            upright = self._sprites.frame(mascot_mod.DRAG, 0) if self._sprites else None
+            offset = (0.0, (upright.height() if upright else 32) / 2.0)
+        self._drag_grab = (cursor, offset)
         self._drag_moved = 0.0
         self.mascot.grab()
         self.setCursor(Qt.CursorShape.ClosedHandCursor)
@@ -494,13 +569,27 @@ class MascotOverlay(QWidget):
         path = QPainterPath()
         path.addRoundedRect(box, BUBBLE_RADIUS, BUBBLE_RADIUS)
 
-        # 꼬리는 머리 쪽을 가리킨다. 몸통 중앙에 맞추되 말풍선 밖으로 나가지 않게 한다.
-        tip_x = min(max(self._body.center().x(), box.left() + BUBBLE_RADIUS + 6),
-                    box.right() - BUBBLE_RADIUS - 6)
+        # 꼬리는 몸 쪽을 가리킨다. 몸통 중앙에 맞추되 말풍선 밖으로 나가지 않게 한다.
         tail = QPainterPath()
-        tail.moveTo(tip_x - 6, box.bottom() - 1)
-        tail.lineTo(tip_x + 6, box.bottom() - 1)
-        tail.lineTo(tip_x, box.bottom() + BUBBLE_TAIL)
+        side = self._side
+        if side in (mascot_mod.LEFT, mascot_mod.RIGHT):
+            tip_y = min(max(self._body.center().y(), box.top() + BUBBLE_RADIUS + 6),
+                        box.bottom() - BUBBLE_RADIUS - 6)
+            edge = box.left() + 1 if side == mascot_mod.LEFT else box.right() - 1
+            point = edge - BUBBLE_TAIL if side == mascot_mod.LEFT else edge + BUBBLE_TAIL
+            tail.moveTo(edge, tip_y - 6)
+            tail.lineTo(edge, tip_y + 6)
+            tail.lineTo(point, tip_y)
+        else:
+            tip_x = min(max(self._body.center().x(), box.left() + BUBBLE_RADIUS + 6),
+                        box.right() - BUBBLE_RADIUS - 6)
+            if side == mascot_mod.CEILING:
+                edge, point = box.top() + 1, box.top() - BUBBLE_TAIL
+            else:
+                edge, point = box.bottom() - 1, box.bottom() + BUBBLE_TAIL
+            tail.moveTo(tip_x - 6, edge)
+            tail.lineTo(tip_x + 6, edge)
+            tail.lineTo(tip_x, point)
         tail.closeSubpath()
         path = path.united(tail)
 

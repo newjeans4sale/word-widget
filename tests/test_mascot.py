@@ -325,3 +325,134 @@ def test_bark_and_beg_are_short():
     for action in ("bark", "beg"):
         lo, hi = mascot_mod.DURATIONS[action]
         assert hi <= 4.0, action
+
+
+# --- 벽과 천장 ----------------------------------------------------------
+
+from mascot import (CEILING, FLOOR, JUMP, LEFT, RIGHT, Area)  # noqa: E402
+
+AREA = Area(left=0.0, top=0.0, right=1440.0, bottom=875.0, half=20.0)
+
+
+def run_area(m, seconds, area=AREA, dt=DT, check=None):
+    surfaces, actions = set(), set()
+    for _ in range(int(seconds / dt)):
+        m.update(dt, area)
+        surfaces.add(m.surface)
+        actions.add(m.action)
+        if check:
+            check(m)
+    return surfaces, actions
+
+
+def test_visits_floor_walls_and_ceiling():
+    m = Mascot(rng=random.Random(1))
+    m.place(700.0, AREA.bottom)
+    surfaces, actions = run_area(m, 1800)
+    assert surfaces == {FLOOR, LEFT, RIGHT, CEILING}
+    assert JUMP in actions
+
+
+def test_never_lets_go_on_its_own():
+    """벽이나 천장에서 스스로 떨어지지 않는다. 떨어지는 것은 사용자가 놓았을 때뿐이다."""
+    m = Mascot(rng=random.Random(2))
+    m.place(700.0, AREA.bottom)
+    _, actions = run_area(m, 3600)
+    assert FALL not in actions
+
+
+def test_stays_on_the_edges_of_the_screen():
+    def check(m):
+        assert AREA.left <= m.x <= AREA.right
+        assert AREA.top <= m.y <= AREA.bottom
+        if m.surface == LEFT:
+            assert m.x == AREA.left
+        elif m.surface == RIGHT:
+            assert m.x == AREA.right
+        elif m.surface == CEILING:
+            assert m.y == AREA.top
+        elif m.action not in (FALL, JUMP, DRAG):
+            assert m.y == AREA.bottom
+    m = Mascot(rng=random.Random(3))
+    m.place(700.0, AREA.bottom)
+    run_area(m, 3600, check=check)
+
+
+def test_time_is_spread_over_all_surfaces():
+    m = Mascot(rng=random.Random(4))
+    m.place(700.0, AREA.bottom)
+    counts = {FLOOR: 0, LEFT: 0, RIGHT: 0, CEILING: 0}
+    for _ in range(int(3 * 3600 / DT)):
+        m.update(DT, AREA)
+        counts[m.surface] += 1
+    total = sum(counts.values())
+    assert counts[FLOOR] / total < 0.6
+    assert (counts[LEFT] + counts[RIGHT]) / total > 0.15
+    assert counts[CEILING] / total > 0.1
+
+
+def _climb_onto(surface, seed=5):
+    m = Mascot(rng=random.Random(seed))
+    m.place(700.0, AREA.bottom)
+    for _ in range(int(3600 / DT)):
+        m.update(DT, AREA)
+        if m.surface == surface and m.action in (IDLE, WALK):
+            return m
+    raise AssertionError(f"{surface} 에 닿지 못했다")
+
+
+def test_released_from_a_wall_falls_straight_down():
+    m = _climb_onto(LEFT)
+    m.grab()
+    assert m.surface == FLOOR
+    m.drag_to(300.0, 200.0)
+    m.release()
+    for _ in range(200):
+        m.update(DT, AREA)
+        assert m.state.x == 300.0
+        if m.action != FALL:
+            break
+    assert (m.surface, m.state.y) == (FLOOR, AREA.bottom)
+
+
+def test_wander_off_on_the_ceiling_comes_down_and_stands():
+    m = _climb_onto(CEILING)
+    m.set_wander(False)
+    assert m.action == FALL
+    _, actions = run_area(m, 60)
+    assert m.surface == FLOOR and m.state.y == AREA.bottom
+    assert actions <= {FALL, IDLE}
+
+
+def test_hover_holds_it_in_place_on_a_wall():
+    m = _climb_onto(RIGHT)
+    m.set_held(True)
+    pos = (m.state.x, m.state.y)
+    surfaces, actions = run_area(m, 60)
+    assert surfaces == {RIGHT}
+    assert actions == {IDLE}
+    assert (m.state.x, m.state.y) == pos
+    m.set_held(False)
+    surfaces, _ = run_area(m, 600)
+    assert len(surfaces) > 1
+
+
+def test_jump_lands_on_a_wall():
+    m = Mascot(rng=random.Random(6))
+    m.place(300.0, AREA.bottom)
+    m._area = AREA
+    assert m._start_jump()
+    for _ in range(100):
+        m.update(DT, AREA)
+        if m.action != JUMP:
+            break
+    assert m.surface == LEFT
+    assert AREA.top + AREA.half <= m.state.y <= AREA.bottom - AREA.half
+
+
+def test_no_climbing_without_walls():
+    m = Mascot(rng=random.Random(7))
+    m.place(500.0, BOUNDS[2])
+    for _ in range(int(1800 / DT)):
+        m.update(DT, BOUNDS)
+        assert m.surface == FLOOR

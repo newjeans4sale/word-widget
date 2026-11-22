@@ -1,0 +1,13 @@
+{
+  "fps": 6.0,
+  "scale": 1.0,
+  "facing": "left",
+  "actions": {
+    "walk": {
+      "fps": 8
+    },
+    "run": {
+      "fps": 12
+    }
+  }
+}
