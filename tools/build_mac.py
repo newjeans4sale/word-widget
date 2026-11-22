@@ -48,7 +48,8 @@ def selftest(exe: Path) -> bool:
     log = platform_mac.DATA_DIR / "word-widget.log"
     before = log.stat().st_size if log.exists() else 0
     proc = subprocess.run([str(exe), "--selftest", "2000"], timeout=60)
-    text = log.read_text(encoding="utf-8", errors="replace")[before:] if log.exists() else ""
+    # 크기는 바이트 단위다. 문자열로 바꾼 뒤 자르면 한글 때문에 위치가 어긋난다.
+    text = log.read_bytes()[before:].decode("utf-8", errors="replace") if log.exists() else ""
     if "이미 실행 중" in text:
         print("위젯이 이미 떠 있어 셀프테스트를 확인하지 못했습니다", file=sys.stderr)
         return False

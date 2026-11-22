@@ -1,0 +1,106 @@
+#!/bin/bash
+# macOS 설치와 업데이트를 한 번에 한다.
+#
+#   ./start
+#
+# 1. 쓸 수 있는 Python(3.9~3.13)을 찾는다. git 이 있는 Mac 이면 /usr/bin/python3 가 있다.
+#    없으면 독립 실행형 Python 을 내려받아 이 폴더의 .python/ 에만 둔다 (시스템은 건드리지 않음)
+# 2. .venv 를 만들고 requirements-mac.txt 를 설치한다
+# 3. 떠 있는 위젯이 있으면 끈다 (새 앱으로 바꾸기 위해)
+# 4. tools/build_mac.py --install: 앱을 만들고, /Applications 에 넣고,
+#    로그인 시 실행을 등록하고, 켠다
+#
+# 다시 실행하면 지금 코드로 앱을 새로 만들어 바꾼다. 단어장과 설정은 그대로 남는다.
+set -euo pipefail
+cd "$(dirname "$0")"
+
+if [ "$(uname)" != "Darwin" ]; then
+    echo "./start is for macOS. On Windows see README (tools/build_exe.py)."
+    exit 1
+fi
+
+# python-build-standalone 의 고정 버전. 받은 파일은 sha256 으로 확인한다.
+PBS_TAG=20261026
+PBS_VERSION=3.12.16
+PBS_SHA_ARM64=fbf4afef53c2a6b72bb741bc06d5671a9dfaf87bd84e5aa73ac9b3d0d589f14e
+PBS_SHA_X86_64=a962e47df522889eaa7ff0d6a56203f1079f68aabb65ffdbe8455f362bc769f3
+
+pick_python() {
+    local c path
+    for c in "${PYTHON:-}" python3.13 python3.12 python3.11 python3.10 python3 /usr/bin/python3; do
+        [ -n "$c" ] || continue
+        path=$(command -v "$c" 2>/dev/null) || continue
+        # 개발자 도구가 없는 Mac 의 /usr/bin/python3 는 실행하는 순간 설치 창을 띄운다.
+        if [ "$path" = /usr/bin/python3 ] && ! xcode-select -p >/dev/null 2>&1; then
+            continue
+        fi
+        if "$c" -c 'import sys; sys.exit(0 if (3, 9) <= sys.version_info[:2] <= (3, 13) else 1)' 2>/dev/null; then
+            echo "$c"
+            return 0
+        fi
+    done
+    return 1
+}
+
+standalone_python() {
+    local triple sha url tgz=build/python.tar.gz
+    case "$(uname -m)" in
+        arm64)  triple=aarch64-apple-darwin; sha=$PBS_SHA_ARM64 ;;
+        x86_64) triple=x86_64-apple-darwin;  sha=$PBS_SHA_X86_64 ;;
+        *) return 1 ;;
+    esac
+    if [ ! -x .python/bin/python3 ]; then
+        url="https://github.com/astral-sh/python-build-standalone/releases/download/${PBS_TAG}/cpython-${PBS_VERSION}%2B${PBS_TAG}-${triple}-install_only.tar.gz"
+        echo "==> Downloading Python ${PBS_VERSION} (one time, about 25 MB)" >&2
+        mkdir -p build
+        curl -fL --progress-bar -o "$tgz" "$url" || return 1
+        if ! echo "${sha}  ${tgz}" | shasum -a 256 -c - >/dev/null 2>&1; then
+            echo "The Python download did not match its checksum." >&2
+            rm -f "$tgz"
+            return 1
+        fi
+        rm -rf .python .python.tmp
+        mkdir .python.tmp
+        tar -xzf "$tgz" -C .python.tmp
+        mv .python.tmp/python .python
+        rm -rf .python.tmp "$tgz"
+    fi
+    echo .python/bin/python3
+}
+
+if [ ! -x .venv/bin/python ] || ! .venv/bin/python -c 'import sys' 2>/dev/null; then
+    if ! PY=$(pick_python) && ! PY=$(standalone_python); then
+        echo "Couldn't get Python. Check the internet connection and run ./start again."
+        exit 1
+    fi
+    echo "==> Setting up Python ($("$PY" --version 2>&1))"
+    rm -rf .venv
+    "$PY" -m venv .venv
+fi
+
+echo "==> Installing requirements"
+.venv/bin/python -m pip install -q --disable-pip-version-check --upgrade pip
+.venv/bin/python -m pip install -q --disable-pip-version-check -r requirements-mac.txt
+
+# 떠 있는 위젯은 앱의 실행 파일 경로로만 찾는다. 다른 프로세스는 건드리지 않는다.
+APP_EXE="/Applications/WordWidget.app/Contents/MacOS/word-widget"
+pid=$(pgrep -f "^${APP_EXE}" || true)
+if [ -n "$pid" ]; then
+    echo "==> Closing the running widget"
+    kill -INT $pid 2>/dev/null || true
+    for _ in 1 2 3 4 5 6 7 8 9 10; do
+        pgrep -f "^${APP_EXE}" >/dev/null || break
+        sleep 0.5
+    done
+fi
+
+echo "==> Building and installing Word Widget"
+mkdir -p build
+.venv/bin/python tools/build_mac.py --install > build/start.log 2>&1 || {
+    tail -20 build/start.log
+    echo "Build failed. Full log: build/start.log"
+    exit 1
+}
+
+echo "Done. Word Widget is running and opens at login."
+echo "Menu: the W icon in the menu bar."

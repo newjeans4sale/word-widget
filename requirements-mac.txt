@@ -1,0 +1,7 @@
+# macOS 빌드에 필요한 것. ./start 가 .venv 에 설치한다.
+# PySide6 전체 대신 Essentials 만 쓴다 (QtCore/QtGui/QtWidgets 만 필요하다).
+PySide6-Essentials==6.8.3
+pyobjc-core
+pyobjc-framework-Cocoa
+pyobjc-framework-Quartz
+pyinstaller>=6.10

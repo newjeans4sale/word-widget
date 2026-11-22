@@ -308,18 +308,23 @@ Windows 판과 같은 동작을 `platform_mac.py` 가 맡습니다. 포커스를
 데스크탑(Space)과 전체화면 Space 에 같은 창이 보이게 합니다.
 
 ```
-python3.12 -m venv .venv
-.venv/bin/python -m pip install PySide6==6.8.3 pyobjc-core pyobjc-framework-Cocoa pyobjc-framework-Quartz pytest pyinstaller
-.venv/bin/python tools/build_mac.py            # dist/WordWidget.app
-.venv/bin/python tools/build_mac.py --install  # /Applications 에 넣고 로그인 시 실행 등록 후 켬
+git clone https://github.com/newjeans4sale/word-widget
+cd word-widget
+./start
 ```
+
+`./start` 한 번으로 Python 환경을 만들고(`requirements-mac.txt`), 앱을 빌드해 `/Applications/WordWidget.app`
+에 넣고, 로그인 시 실행을 등록하고, 켭니다. 따로 설치할 것은 없습니다. Mac 에 쓸 수 있는
+Python(3.9~3.13)이 있으면 그것을 쓰고, 없으면 독립 실행형 Python 3.12 를 한 번 내려받아
+(sha256 확인) 이 폴더의 `.python/` 에만 둡니다. 코드를 받은 뒤(`git pull`) 다시 `./start` 하면 앱을 새로 만들어 바꿉니다.
+단어장과 설정은 그대로 남습니다. 그 Mac 에서 직접 빌드하므로 칩 종류와 상관없이 돌아갑니다.
 
 - Dock 과 Cmd+Tab 에 뜨지 않고 메뉴 막대 아이콘만 있습니다 (`LSUIElement`).
 - 단어장, 설정, 캐릭터, 로그는 `~/Library/Application Support/word-widget/` 에 있습니다.
   첫 실행 때 앱 안의 기본 파일을 꺼내 두고, 이후에는 덮어쓰지 않습니다.
 - 메뉴 막대 > **Open at login** 은 `~/Library/LaunchAgents/io.github.newjeans4sale.word-widget.plist` 를 둡니다.
-- 서명이 없는 앱이라 다른 Mac 에서 처음 열 때 한 번, 설정 > 개인정보 보호 및 보안 >
-  '그래도 열기' 가 필요합니다. 빌드한 Mac 과 같은 칩(애플 실리콘/인텔)에서만 돕니다.
+- 빌드한 `dist/WordWidget.app` 을 다른 Mac 으로 옮기면, 서명이 없어 처음 열 때 한 번
+  설정 > 개인정보 보호 및 보안 > '그래도 열기' 가 필요하고 같은 칩에서만 돕니다.
 - Segoe UI 는 macOS 에 없어 Helvetica Neue 로 대신 그립니다.
 - 글자 크기 상한은 24pt입니다 (Finder 아이콘 라벨 12pt의 2배).
 
