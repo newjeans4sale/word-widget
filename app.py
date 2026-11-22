@@ -115,8 +115,8 @@ class WidgetApp:
                 overlay = mascot_overlay.MascotOverlay(self.cfg, self.sprites_dir)
                 self._pending_warnings.extend(overlay.warnings)
                 return overlay
-            warning = ("캐릭터가 없어 텍스트 모드로 시작합니다.\n"
-                       "tools/fetch_sprites.py 를 한 번 실행해 주세요")
+            warning = ("No characters found, starting in text mode.\n"
+                       "Run tools/fetch_sprites.py once to get them")
             log.warning("%s (%s)", warning, self.sprites_dir)
             self._pending_warnings.append(warning)
             self.cfg.mode = "text"
@@ -189,7 +189,7 @@ class WidgetApp:
 
         self._flush_warnings()
         if self.source.error:
-            self.tray.notify("단어 목록을 읽지 못했습니다",
+            self.tray.notify("Couldn't read the word list",
                              self.source.error + "\n" + str(self.words_path))
 
     def shutdown(self) -> None:
@@ -273,7 +273,7 @@ class WidgetApp:
             self.cfg.character = self.overlay.character
             self._save_config()
         else:
-            self.tray.notify("캐릭터를 바꾸지 못했습니다", name)
+            self.tray.notify("Couldn't change the character", name)
 
     def _on_mascot_moved(self, x: int, y: int) -> None:
         self.cfg.mascot_x, self.cfg.mascot_y = x, y
@@ -304,12 +304,12 @@ class WidgetApp:
         for w in warnings:
             log.warning("설정: %s", w)
         if words_ok:
-            self.tray.notify("다시 불러왔습니다", f"단어 {self.source.count}개")
+            self.tray.notify("Reloaded", f"{self.source.count} words")
         else:
             # 편집기가 저장 중 파일을 비운 순간일 수 있다. 기존 목록은 살아 있다.
-            self.tray.notify("단어 목록을 갱신하지 못했습니다",
-                             (self.source.error or "파일을 읽을 수 없습니다")
-                             + "\n기존 목록을 유지합니다")
+            self.tray.notify("Couldn't update the word list",
+                             (self.source.error or "Can't read the file")
+                             + "\nKeeping the current list")
 
     def _on_autostart(self, enabled: bool) -> None:
         if getattr(sys, "frozen", False):
@@ -321,11 +321,11 @@ class WidgetApp:
                 pythonw = Path(sys.executable)
             command = autostart.autostart_command(pythonw, self.base_dir / "main.py")
         if autostart.set_autostart(enabled, command):
-            when = "로그인하면" if platform_mac.IS_MAC else "부팅 시"
-            self.tray.notify("자동 실행",
-                             f"켜짐 - {when} 자동으로 뜹니다" if enabled else "꺼짐")
+            when = "when you log in" if platform_mac.IS_MAC else "with Windows"
+            self.tray.notify("Auto start",
+                             f"On - starts {when}" if enabled else "Off")
         else:
-            self.tray.notify("자동 실행 설정 실패", "로그를 확인해 주세요")
+            self.tray.notify("Couldn't change auto start", "See word-widget.log")
             if self.tray.act_autostart is not None:
                 self.tray.act_autostart.blockSignals(True)
                 self.tray.act_autostart.setChecked(not enabled)
@@ -385,7 +385,7 @@ class WidgetApp:
 
     # --- 저장 -----------------------------------------------------------
 
-    def _flush_warnings(self, title: str = "설정을 일부 되돌렸습니다") -> None:
+    def _flush_warnings(self, title: str = "Some settings were reset") -> None:
         for w in self._pending_warnings:
             self.tray.notify(title, w)
         self._pending_warnings.clear()
@@ -484,6 +484,6 @@ class WidgetApp:
         self._apply_timer()
         self._save_config()
         self.tray.notify(
-            "기본값으로 되돌렸습니다",
-            "글자 %dpt / 간격 %.0f초 / 우측 하단\n단어 목록 경로는 그대로입니다"
+            "Reset to defaults",
+            "Text %dpt / every %.0fs / bottom right\nWord list location unchanged"
             % (self.cfg.font_size_pt, self.cfg.interval_sec))

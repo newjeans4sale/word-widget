@@ -103,30 +103,30 @@ class TrayController(QObject):
         self._retries = 0
         self._retry_timer: QTimer | None = None
 
-        self.act_pause = self._add_check("일시정지", self.pause_toggled)
-        self.act_prev = self._add_action("이전 단어", self.prev_word)
-        self.act_next = self._add_action("다음 단어", self.next_word)
+        self.act_pause = self._add_check("Pause", self.pause_toggled)
+        self.act_prev = self._add_action("Previous word", self.prev_word)
+        self.act_next = self._add_action("Next word", self.next_word)
         self.menu.addSeparator()
-        self.act_move = self._add_check("이동 · 크기 조정", self.move_mode_toggled)
+        self.act_move = self._add_check("Move and resize", self.move_mode_toggled)
         self.menu.addSeparator()
-        self.act_mascot = self._add_check("마스코트 모드", self.mascot_mode_toggled)
-        self.act_wander = self._add_check("산책", self.wander_toggled)
-        self.character_menu = self.menu.addMenu("캐릭터")
+        self.act_mascot = self._add_check("Mascot mode", self.mascot_mode_toggled)
+        self.act_wander = self._add_check("Walk around", self.wander_toggled)
+        self.character_menu = self.menu.addMenu("Character")
         self._character_group = QActionGroup(self)
         self._character_group.setExclusive(True)
         self.set_characters([], None)
         self.menu.addSeparator()
-        self.act_reload = self._add_action("다시 불러오기 (단어+설정)", self.reload_requested)
-        self.act_open_words = self._add_action("단어 목록 열기", self.open_words)
-        self.act_open_config = self._add_action("설정 열기", self.open_config)
-        self.act_reset = self._add_action("기본값으로 되돌리기 (모양·위치)", self.reset_requested)
+        self.act_reload = self._add_action("Reload words and settings", self.reload_requested)
+        self.act_open_words = self._add_action("Open word list", self.open_words)
+        self.act_open_config = self._add_action("Open settings", self.open_config)
+        self.act_reset = self._add_action("Reset look and position", self.reset_requested)
         self.act_autostart = None
         if show_autostart:
             self.menu.addSeparator()
             self.act_autostart = self._add_check(
-                "로그인 시 실행" if IS_MAC else "Windows 시작 시 실행", self.autostart_toggled)
+                "Open at login" if IS_MAC else "Start with Windows", self.autostart_toggled)
         self.menu.addSeparator()
-        self.act_quit = self._add_action("종료", self.quit_requested)
+        self.act_quit = self._add_action("Quit", self.quit_requested)
 
     # --- 메뉴 구성 -----------------------------------------------------
 
@@ -151,7 +151,7 @@ class TrayController(QObject):
         self.character_menu.clear()
 
         if not names:
-            empty = self.character_menu.addAction("(sprites 폴더가 비어 있음)")
+            empty = self.character_menu.addAction("(sprites folder is empty)")
             empty.setEnabled(False)
             return
         for name in names:
@@ -187,7 +187,7 @@ class TrayController(QObject):
             self._schedule_retry()
             return False
         self.tray = QSystemTrayIcon(self._icon, self)
-        self.tray.setToolTip("영단어 위젯")
+        self.tray.setToolTip("Word Widget")
         self.tray.setContextMenu(self.menu)
         self.tray.activated.connect(self._on_activated)
         self.tray.show()

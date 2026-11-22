@@ -8,7 +8,7 @@ import locale
 import random
 from pathlib import Path
 
-GUIDE_TEXT = "words.txt에 단어를 넣어주세요"
+GUIDE_TEXT = "Add words to words.txt"
 
 MAX_WORD_LEN = 64
 MAX_MEANING_LEN = 120
@@ -84,15 +84,15 @@ def load_words(path) -> tuple[list[str], dict[str, str], str | None]:
     """(단어 목록, 뜻 사전, 오류 사유). 오류가 있어도 예외 대신 사유를 돌려준다."""
     path = Path(path)
     if not path.exists():
-        return [], {}, f"{path.name} 파일이 없습니다"
+        return [], {}, f"{path.name} not found"
     try:
         text, _ = read_text_best_effort(path)
     except OSError as exc:
-        return [], {}, f"{path.name} 을 읽을 수 없습니다: {exc}"
+        return [], {}, f"Can't read {path.name}: {exc}"
 
     words, meanings = parse_entries(text)
     if not words:
-        return [], {}, f"{path.name} 에 단어가 없습니다"
+        return [], {}, f"{path.name} has no words"
     return words, meanings, None
 
 

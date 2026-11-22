@@ -59,38 +59,38 @@ def _is_number(v) -> bool:
 
 def _num(key, value, default, lo, hi, warnings, *, integer=False):
     if not _is_number(value):
-        warnings.append(f"{key}: 숫자가 아님({value!r}) → 기본값 {default}")
+        warnings.append(f"{key}: not a number ({value!r}) → default {default}")
         return default
     clamped = min(max(float(value), lo), hi)
     if clamped != float(value):
-        warnings.append(f"{key}: {value} 는 범위 [{lo}, {hi}] 밖 → {clamped}")
+        warnings.append(f"{key}: {value} is outside [{lo}, {hi}] → {clamped}")
     return int(clamped) if integer else clamped
 
 
 def _text(key, value, default, warnings):
     if not isinstance(value, str) or not value.strip():
-        warnings.append(f"{key}: 문자열이 아님({value!r}) → 기본값 {default!r}")
+        warnings.append(f"{key}: not text ({value!r}) → default {default!r}")
         return default
     return value
 
 
 def _color(key, value, default, warnings):
     if not isinstance(value, str) or not _COLOR_RE.match(value):
-        warnings.append(f"{key}: 색상 형식이 아님({value!r}) → 기본값 {default}")
+        warnings.append(f"{key}: not a color ({value!r}) → default {default}")
         return default
     return value
 
 
 def _choice(key, value, default, allowed, warnings):
     if value not in allowed:
-        warnings.append(f"{key}: 허용되지 않는 값({value!r}) → 기본값 {default!r}")
+        warnings.append(f"{key}: not allowed ({value!r}) → default {default!r}")
         return default
     return value
 
 
 def _flag(key, value, default, warnings):
     if not isinstance(value, bool):
-        warnings.append(f"{key}: true/false 가 아님({value!r}) → 기본값 {default}")
+        warnings.append(f"{key}: not true/false ({value!r}) → default {default}")
         return default
     return value
 
@@ -103,7 +103,7 @@ def _coord(key, value, warnings):
     if value is None:
         return None
     if not _is_number(value):
-        warnings.append(f"{key}: 좌표가 숫자가 아님({value!r}) → 미지정")
+        warnings.append(f"{key}: position is not a number ({value!r}) → unset")
         return None
     return int(value)
 
@@ -130,17 +130,17 @@ def load(path, max_font_pt: float = 18.0) -> tuple[Config, list[str]]:
         raw = json.loads(path.read_text(encoding="utf-8"))
     except Exception as exc:
         raw = None
-        warnings.append(f"config.json 을 읽을 수 없음({exc}) → 기본값으로 시작")
+        warnings.append(f"Can't read config.json ({exc}) → starting with defaults")
 
     if not isinstance(raw, dict):
         if not warnings:
-            warnings.append("config.json 의 최상위가 객체가 아님 → 기본값으로 시작")
+            warnings.append("config.json is not a JSON object → starting with defaults")
         try:
             # 사용자가 쓴 원본 바이트를 보존한다.
             os.replace(path, _backup_path(path))
-            warnings.append(f"원본을 {_backup_path(path).name} 으로 보관했습니다")
+            warnings.append(f"The original was kept as {_backup_path(path).name}")
         except OSError as exc:
-            warnings.append(f"백업 실패: {exc}")
+            warnings.append(f"Backup failed: {exc}")
         return defaults, warnings
 
     cap = max(float(max_font_pt), float(MIN_FONT_PT))

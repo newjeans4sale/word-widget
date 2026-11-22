@@ -124,7 +124,7 @@ def _clamped(key, value, lo, hi, warnings: list[str]) -> float:
     """범위 밖이면 깎고 경고를 남긴다. config.py 가 값을 다루는 방식과 같게 맞춘 것."""
     result = _clamp(float(value), lo, hi)
     if result != float(value):
-        warnings.append(f"{key}: {value} 는 범위 [{lo}, {hi}] 밖 → {result}")
+        warnings.append(f"{key}: {value} is outside [{lo}, {hi}] → {result}")
     return result
 
 
@@ -162,10 +162,10 @@ def _read_meta(directory: Path, warnings: list[str]) -> dict:
     try:
         data = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, ValueError) as exc:
-        warnings.append(f"meta.json 을 읽지 못했습니다 ({exc}) → 기본값")
+        warnings.append(f"Can't read meta.json ({exc}) → defaults")
         return {}
     if not isinstance(data, dict):
-        warnings.append("meta.json 이 객체가 아닙니다 → 기본값")
+        warnings.append("meta.json is not a JSON object → defaults")
         return {}
     return data
 
@@ -175,7 +175,7 @@ def _meta_fps(meta: dict, key: str, default: float, warnings: list[str]) -> floa
     if value is None:
         return default
     if not isinstance(value, (int, float)) or isinstance(value, bool):
-        warnings.append(f"{key} fps: 숫자가 아님({value!r}) → {default}")
+        warnings.append(f"{key} fps: not a number ({value!r}) → {default}")
         return default
     return _clamped(f"{key} fps", value, *FPS_RANGE, warnings=warnings)
 
@@ -197,11 +197,11 @@ def load_spec(directory) -> CharacterSpec | None:
         return None
 
     meta = _read_meta(directory, warnings)
-    base_fps = _meta_fps(meta, "기본", DEFAULT_FPS, warnings)
+    base_fps = _meta_fps(meta, "default", DEFAULT_FPS, warnings)
 
     per_action = meta.get("actions")
     if per_action is not None and not isinstance(per_action, dict):
-        warnings.append(f"actions: 객체가 아님({per_action!r}) → 무시")
+        warnings.append(f"actions: not a JSON object ({per_action!r}) → ignored")
         per_action = None
     per_action = per_action or {}
 
@@ -212,24 +212,24 @@ def load_spec(directory) -> CharacterSpec | None:
         if isinstance(override, dict):
             fps = _meta_fps(override, name, base_fps, warnings)
         elif override is not None:
-            warnings.append(f"actions.{name}: 객체가 아님({override!r}) → 무시")
+            warnings.append(f"actions.{name}: not a JSON object ({override!r}) → ignored")
         actions[name] = ActionSpec(name=name, files=tuple(files), fps=fps)
 
     scale = meta.get("scale", 1.0)
     if not isinstance(scale, (int, float)) or isinstance(scale, bool):
-        warnings.append(f"scale: 숫자가 아님({scale!r}) → 1.0")
+        warnings.append(f"scale: not a number ({scale!r}) → 1.0")
         scale = 1.0
     scale = _clamped("scale", scale, *SCALE_RANGE, warnings=warnings)
 
     facing_raw = meta.get("facing", "right")
     if facing_raw not in ("right", "left"):
         if "facing" in meta:
-            warnings.append(f"facing: 'right'/'left' 가 아님({facing_raw!r}) → right")
+            warnings.append(f"facing: not 'right' or 'left' ({facing_raw!r}) → right")
         facing_raw = "right"
 
     smooth = meta.get("smooth")
     if smooth is not None and not isinstance(smooth, bool):
-        warnings.append(f"smooth: 참/거짓이 아님({smooth!r}) → 자동")
+        warnings.append(f"smooth: not true/false ({smooth!r}) → auto")
         smooth = None
 
     for w in warnings:
@@ -265,10 +265,10 @@ def pick_character(root, preferred: str) -> tuple[str | None, str | None]:
     """
     available = list_characters(root)
     if not available:
-        return None, f"쓸 수 있는 캐릭터가 없습니다: {root}"
+        return None, f"No characters found in {root}"
     if preferred in available:
         return preferred, None
-    return available[0], (f"캐릭터 {preferred!r} 를 찾지 못해 {available[0]!r} 로 대체합니다")
+    return available[0], (f"Character {preferred!r} not found, using {available[0]!r}")
 
 
 # --- Qt 층: 픽스맵 캐시 ---------------------------------------------------
